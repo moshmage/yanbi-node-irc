@@ -219,7 +219,7 @@ SLAPBOT.prototype.actionGamble = function (nick, message) {
     message = THAT.stringToArray(message);
     var gambledMoney = parseInt(message[1],10);
     var gambleOption = parseInt(message[2],10);
-    var randomChosenBox = ((Math.random() * CONF.CONST.BOXES) + 1);
+    var randomChosenBox = Math.floor(Math.random() * CONF.CONST.BOXES) + 1;
     var gotTheBunny = dice.roll('1d20').result === 20;
     var prize = gambledMoney * CONF.CONST.GAMBLEMULTIPLIER;
     var wonMessage;
