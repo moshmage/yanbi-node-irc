@@ -19,7 +19,7 @@ var SLAPBOT = module.exports = function SLAPBOT() {
     this.PUB = [];
     this.channelEvents = [];
     this.IGNORE = {};
-    this.client = new irc.Client('irc.snoonet.org', CONF.CONST.MYNICK, { channels: ['#' + CONF.CONST.CHANNEL], debug: true });
+    this.client = new irc.Client('irc.snoonet.org', CONF.CONST.MYNICK, { channels: ['#' + CONF.CONST.CHANNEL], debug: false });
 
 };
 
@@ -361,6 +361,7 @@ SLAPBOT.prototype.actionDrinkBeer = function (nick, message) {
 
     nick.drunk = (nick.drunk === false) ? 0 : nick.drunk;
     nick.coins -= costs;
+    THAT.RECORDS['-gambleTehBunny-'].coins += costs;
     nick.drunk += amount;
     
     if (fromNick !== nick.nick) {
@@ -368,7 +369,7 @@ SLAPBOT.prototype.actionDrinkBeer = function (nick, message) {
     } else {
         THAT.speakOut('Drunkard notice: If you fall, you\'ll die. Please, don\'t drink and slap.');
     }
-    THAT.speakIn(fromNick,'Thank you mate, that\'ll be ' + costs + 'coins');
+    THAT.speakIn(fromNick,'You lost ' + costs + 'coins to tehBunny');
     
 };
 
@@ -427,6 +428,7 @@ SLAPBOT.prototype.startListening = function startListening() {
             if (message.indexOf(object.wordMatch) === 0) {
                 object.callback(nick, message);
                 THAT.IGNORE[nick] = new Date().getTime();
+                console.log({event:wordMatch, nick: nick, date: new Date().getUTCDate()});
             }
         });
     });
