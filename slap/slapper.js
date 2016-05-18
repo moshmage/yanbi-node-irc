@@ -187,7 +187,7 @@ SLAPBOT.prototype.actionSayMoneyStats = function (nick, message) {
     }
     
     if (THAT.RECORDS[nick].lastBank) {
-        daysPassed = THAT.RECORDS[nick].lastBank - new Date().now() / CONF.CONST.DAY;
+        daysPassed = THAT.RECORDS[nick].lastBank - new Date().getTime() / CONF.CONST.DAY;
         if (daysPassed < 1) {
             THAT.speakOut(nick + ', bank\'s still closed for you.');
             return false;
@@ -198,7 +198,7 @@ SLAPBOT.prototype.actionSayMoneyStats = function (nick, message) {
         THAT.RECORDS[nick].coins = CONF.PLAYERCONST.MINCASH;
         coins = CONF.PLAYERCONST.MINCASH;
         THAT.speakIn(nick, 'You have new currency! 15coins. You\'ll be able to use !money again in 24hrs');
-        THAT.RECORDS[nick].lastBank = new Date().now();
+        THAT.RECORDS[nick].lastBank = new Date().getTime();
     }
     
     THAT.speakOut('<' + nick + '> has ' + coins + 'coins');
@@ -254,7 +254,7 @@ SLAPBOT.prototype.actionGamble = function (nick, message) {
                 if (THAT.isOnChannel(nick.nick)) {
                     THAT.speakIn(nick.nick, 'The pub has closed. !gamble again ;)');
                 }
-            }, 3600);
+            }, 3600 * 1000);
             
             THAT.RECORDS['-gambleTehBunny-'].coins = 0;
             
@@ -403,7 +403,7 @@ SLAPBOT.prototype.startListening = function startListening() {
     this.channelEvents.push({wordMatch: CONF.CONST.CMDTRIGGER + 'thegame', callback: this.actionSayAvailCommands});
 
     this.client.addListener('message#' + CONF.CONST.CHANNEL, function(nick, message) {
-        this.channelEvents.forEach(function (object) {
+        THAT.channelEvents.forEach(function (object) {
             if (message.indexOf(object.wordMatch) === 0) {
                 object.callback(nick, message);
             }
