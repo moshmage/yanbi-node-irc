@@ -85,20 +85,24 @@ SLAPBOT.prototype.actionSlap = function (fromNick, message) {
 
     if (!THAT.RECORDS[fromNick]) {
         fromNick = THAT.makeNewRecord(fromNick);
+    } else {
+        fromNick = THAT.RECORDS[fromNick];
     }
 
     if (!THAT.RECORDS[slapped]) {
         slapped = THAT.makeNewRecord(slapped);
+    } else {
+        slapped = THAT.RECORDS[slapped];
     }
 
     if (slapped.health <= 0) {
         THAT.speakOut(fromNick + ': <' + slapped + '> is dead. use ' + CONF.CONST.CMDTRIGGER + 'heal <nick> to bring him back to life (15coins) ');
         return false;
     }
-
+    
     if (dice.roll('1d6').result < dice.roll('1d6').result) {
         THAT.speakOut('*SWOOSH*');
-        if (fromNick.drunk !== false && dice.roll('1d6').result === 1) {
+        if (!fromNick.drunk && dice.roll('1d6').result === 1) {
             slap.damage = fromNick.drunk * CONF.CONST.DAMAGEFROMDRUNK;
             fromNick.health -= slap.damage;
             
@@ -120,8 +124,6 @@ SLAPBOT.prototype.actionSlap = function (fromNick, message) {
         
         return true;
     } else {
-        if (!fromNick.str) fromNick = THAT.RECORDS[fromNick];
-        if (!slapped.str) slapped = THAT.RECORDS[slapped];
 
         slap.crit = dice.roll('1d20').result === 20;
         slap.damage = dice.roll('1d6').result + fromNick.str;
@@ -416,10 +418,13 @@ SLAPBOT.prototype.startListening = function startListening() {
         var minsPassed;
         
         if (!THAT.IGNORE[nick]) {
-            THAT.IGNORE[nick] = new Date().getTime();
+            THAT.IGNORE[nick] = { last: new Date().getTime(), warned: false };
         } else {
-            minsPassed = (new Date().getTime() - THAT.IGNORE[nick]);
+            minsPassed = (new Date().getTime() - THAT.IGNORE[nick].last);
             if (minsPassed < CONF.CONST.IGNORETIME) {
+                if (!THAT.IGNORE[nick].warned) {
+                    THAT.speakIn(nick, 'You\'r on a cooldown, chill :)');
+                }
                 return false;
             }
         }
@@ -428,7 +433,7 @@ SLAPBOT.prototype.startListening = function startListening() {
             if (message.indexOf(object.wordMatch) === 0) {
                 object.callback(nick, message);
                 THAT.IGNORE[nick] = new Date().getTime();
-                console.log({event:wordMatch, nick: nick, date: new Date().getUTCDate()});
+                console.log({event: object.wordMatch, nick: nick, date: new Date().getTime()});
             }
         });
     });
