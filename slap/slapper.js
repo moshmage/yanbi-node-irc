@@ -219,7 +219,7 @@ SLAPBOT.prototype.actionGamble = function (nick, message) {
             THAT.speakIn(nick.nick, 'Only the VIP get to get this, have a !beer');
             THAT.PUB.push(nick.nick);
             
-            setTimeout(function removeFromPub() {
+            THAT.RECORDS[nick.nick].pub = setTimeout(function removeFromPub() {
                 THAT.PUB.slice(THAT.PUB.indexOf(nick.nick), 1);
                 if (THAT.isOnChannel(nick.nick)) {
                     THAT.speakIn(nick.nick, 'The pub has closed. !gamble again ;)');
@@ -295,7 +295,31 @@ SLAPBOT.prototype.actionSayLadder = function () {
     THAT.speakOut('SLAP LADDER: ' + string);
 
 };
-SLAPBOT.prototype.actionDrinkBeer = function (nick) {
+
+SLAPBOT.prototype.actionDrinkBeer = function (nick, message) {
+    message = THAT.stringToArray(message);
+    var amount = message[2] || 1;
+    var costs = amount * CONF.PRICE.BEER
+    var fromNick = nick;
+    
+    nick = THAT.RECORDS[message[1]] || THAT.RECORDS[nick] || THAT.makeNewRecord(nick);
+    
+    if (nick.coins <= costs) {
+        THAT.speakOut('Twat, you\'r missing some cash.');
+        THAT.speakIn(fromNick, 'You still have <time>m of Pub access');
+        return false;
+    }
+
+    nick.drunk = (nick.drunk === false) ? 0 : nick.drunk;
+    nick.coins -= costs;
+    nick.drunk += amount;
+    
+    if (fromNick !== nick.nick) {
+        THAT.speakOut(fromNick + ' got some beers to ' + nick.nick);
+    } else {
+        THAT.speakOut('Drunkard notice: If you fall, you\'ll die. Please, don\'t drink and slap.');
+    }
+    THAT.speakIn(fromNick,'Thank you mate, that\'ll be ' + costs + 'coins');
     
 };
 
