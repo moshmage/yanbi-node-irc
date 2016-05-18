@@ -101,7 +101,13 @@ SLAPBOT.prototype.actionSlap = function (fromNick, message) {
         if (fromNick.drunk !== false && dice.roll('1d6').result === 1) {
             slap.damage = fromNick.drunk * CONF.CONST.DAMAGEFROMDRUNK;
             fromNick.health -= slap.damage;
+            
+            slap.moneyDrop = Math.floor((Math.random() * fromNick.coins / CONF.CONST.STEALDIVIDER) + 1);
+            slapped.coins += slap.moneyDrop;
+            fromNick.coins -= slap.moneyDrop;
+            
             THAT.speakOut(fromNick.nick + ', The Jester, just fell on his own taking ' + slap.damage + ' from his drunkness');
+            THAT.speakIn(slapped.nick, 'You spot some ' + slap.moneyDrop + 'coins coming from ' + fromNick.nick + 's\' pocket. You picked them.');
             if (fromNick.health <= 0) {
                 THAT.speakOut('Oh.. Look! ' + fromNick.nick + ' fell to his death. lol.');
                 THAT.speakIn(fromNick.nick, 'You.. just killed yourself, use !ress to comeback');
@@ -109,6 +115,7 @@ SLAPBOT.prototype.actionSlap = function (fromNick, message) {
             
             fromNick.drunk = false;
             THAT.RECORDS[fromNick.nick] = fromNick;
+            THAT.RECORDS[slapped.nick] = slapped;
         }
         
         return true;
