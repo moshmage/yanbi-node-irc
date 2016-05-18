@@ -6,6 +6,7 @@ var irc = require('irc');
 var fs = require('fs');
 var CONF = require('./config.js')();
 var dice = require('rpg-dice');
+var isNumeric = require("isnumeric");
 var THAT = null;
 
 var SLAPBOT = module.exports = function SLAPBOT() {
@@ -16,6 +17,8 @@ var SLAPBOT = module.exports = function SLAPBOT() {
     this.RECORDS = JSON.parse(fs.readFileSync(CONF.CONST.RECORDS, 'UTF8'));
     this.ONCHANNEL = [];
     this.PUB = [];
+    this.channelEvents = [];
+
     this.client = new irc.Client('irc.snoonet.org', CONF.CONST.MYNICK, { channels: ['#' + CONF.CONST.CHANNEL], debug: true });
 
 };
@@ -24,12 +27,10 @@ SLAPBOT.prototype.stringToArray = function (string) {
     return string.trim().split(' ');
 };
 
-SLAPBOT.prototype.listenChannelMessage = function (on, what, callback) {
-    THAT.client.addListener('message#' + on, function(nick, message) {
-        if (message.indexOf(what) === 1) {
-            callback(nick, message);
-        }
-
+SLAPBOT.prototype.listenChannelMessage = function (what, callback) {
+    THAT.channelEvents.push({
+        wordMatch: what,
+        callback: callback
     });
 };
 
@@ -179,22 +180,45 @@ SLAPBOT.prototype.actionSayMoneyStats = function (nick, message) {
     message = THAT.stringToArray(message);
     nick = message[1] || nick;
     var coins = THAT.RECORDS[nick] && THAT.RECORDS[nick].coins || 0;
+    var daysPassed;
+    
+    if (!THAT.RECORDS[nick]) {
+        THAT.makeNewRecord(nick);
+    }
+    
+    if (THAT.RECORDS[nick].lastBank) {
+        daysPassed = THAT.RECORDS[nick].lastBank - new Date().now() / CONF.CONST.DAY;
+        if (daysPassed < 1) {
+            THAT.speakOut(nick + ', bank\'s still closed for you.');
+            return false;
+        }
+    }
+    
     if (coins <= 0) {
         THAT.RECORDS[nick].coins = CONF.PLAYERCONST.MINCASH;
         coins = CONF.PLAYERCONST.MINCASH;
+        THAT.speakIn(nick, 'You have new currency! 15coins. You\'ll be able to use !money again in 24hrs');
+        THAT.RECORDS[nick].lastBank = new Date().now();
     }
     
     THAT.speakOut('<' + nick + '> has ' + coins + 'coins');
 };
 
 SLAPBOT.prototype.actionSayAvailCommands = function () {
-    THAT.speakOut('SLAP Commands: !slap, !ress, !gamble, !money');
+    var string = '';
+    THAT.channelEvents.forEach(function(object, index){
+        string += object.wordMatch
+        if (index < THAT.channelEvents.length - 1) {
+            string += ', ';
+        }
+    });
+    THAT.speakOut('SLAP Commands: ' + string);
 };
 
 SLAPBOT.prototype.actionGamble = function (nick, message) {
     message = THAT.stringToArray(message);
-    var gambledMoney = message[1];
-    var gambleOption = message[2];
+    var gambledMoney = parseInt(message[1],10);
+    var gambleOption = parseInt(message[2],10);
     var randomChosenBox = ((Math.random() * CONF.CONST.BOXES) + 1);
     var gotTheBunny = dice.roll('1d20').result === 20;
     var prize = gambledMoney * CONF.CONST.GAMBLEMULTIPLIER;
@@ -202,8 +226,14 @@ SLAPBOT.prototype.actionGamble = function (nick, message) {
     
     nick = THAT.RECORDS[nick] || THAT.makeNewRecord(nick);
     
+    if (!isNumeric(gambleOption) || !isNumeric(gambledMoney)) {
+        THAT.speakOut('Sir, both arguments need to be numeric');
+        return false;
+    }
+    
     if (gambleOption > CONF.CONST.BOXES || gambleOption === 0 || !gambleOption) {
         THAT.speakOut(nick.nick + ': !gamble <money> <1 ... ' + CONF.CONST.BOXES + '>');
+        return false;
     }
     
     if (nick.coins < gambledMoney) {
@@ -213,7 +243,7 @@ SLAPBOT.prototype.actionGamble = function (nick, message) {
     
     if (gambleOption == randomChosenBox) {
         
-        if (tehBunny) {
+        if (gotTheBunny) {
             prize = prize + THAT.RECORDS['-gambleTehBunny-'].coins;
             wonMessage = 'WOWOWOWWOWO!!111! ' + nick.nick + ' just won TEHBUNNY!';
             THAT.speakIn(nick.nick, 'Only the VIP get to get this, have a !beer');
@@ -238,7 +268,7 @@ SLAPBOT.prototype.actionGamble = function (nick, message) {
         THAT.RECORDS[nick.nick] = nick;
         
     } else {
-        THAT.RECORDS['-gambleTehBunny-'].coins += gambledMoney;
+        THAT.RECORDS['-gambleTehBunny-'].coins += parseInt(gambledMoney,10);
         THAT.speakOut('Better luck next time, ' + nick.nick + '.');
         THAT.speakOut('tehBunny value is ' + THAT.RECORDS['-gambleTehBunny-'].coins + 'coins.');
     }
@@ -254,6 +284,7 @@ SLAPBOT.prototype.actionSayStats = function (nick, message) {
 SLAPBOT.prototype.actionSayLadder = function () {
     var ladder = [];
     var score; var string;
+    
     Object.keys(THAT.RECORDS).forEach(function (nickname, index) {
         if (THAT.RECORDS[nickname].kills < THAT.RECORDS[nickname].deaths) {
             score = (THAT.RECORDS[nickname].kills - (0.5 * THAT.RECORDS[nickname].deaths)) * THAT.RECORDS[nickname].coins / 100;
@@ -281,8 +312,7 @@ SLAPBOT.prototype.actionSayLadder = function () {
         }
         return 0;
     });
-    
-    
+
     ladder.forEach(function (object, index) {
         string += object.nick + ': ' + object.score;
         if (index < ladder.length -1) {
@@ -303,9 +333,19 @@ SLAPBOT.prototype.actionDrinkBeer = function (nick, message) {
     var fromNick = nick;
     
     nick = THAT.RECORDS[message[1]] || THAT.RECORDS[nick] || THAT.makeNewRecord(nick);
+
+    if (THAT.PUB.indexOf(nick) < 0) {
+        THAT.speakOut('Members only...');
+        return false;
+    }
+    
+    if (!isNumeric(amount)) {
+        THAT.speakOut('How many is that again, sir?');
+        return false;
+    }
     
     if (nick.coins <= costs) {
-        THAT.speakOut('Twat, you\'r missing some cash.');
+        THAT.speakOut('I\'m not serving a moneyless bum!');
         THAT.speakIn(fromNick, 'You still have <time>m of Pub access');
         return false;
     }
@@ -342,8 +382,8 @@ SLAPBOT.prototype.addUserToChannel = function (nick) {
 };
 
 SLAPBOT.prototype.removeUserFromChannel = function (nick) {
-    var index = this.ONCHANNEL.indexOf(nick);
-    if (index === -1) {
+    var index = this.ONCHANNEL && this.ONCHANNEL.indexOf(nick);
+    if (index === -1 || false) {
         return false;
     }
 
@@ -353,16 +393,22 @@ SLAPBOT.prototype.removeUserFromChannel = function (nick) {
 SLAPBOT.prototype.startListening = function startListening() {
     
     THAT = this;
-    
-    this.listenChannelMessage(CONF.CONST.CHANNEL, CONF.CONST.CMDTRIGGER + 'slap', this.actionSlap);
-    this.listenChannelMessage(CONF.CONST.CHANNEL, CONF.CONST.CMDTRIGGER + 'ress', this.actionHeal);
-    this.listenChannelMessage(CONF.CONST.CHANNEL, CONF.CONST.CMDTRIGGER + 'money', this.actionSayMoneyStats);
-    this.listenChannelMessage(CONF.CONST.CHANNEL, CONF.CONST.CMDTRIGGER + 'thegame', this.actionSayAvailCommands);
-    this.listenChannelMessage(CONF.CONST.CHANNEL, CONF.CONST.CMDTRIGGER + 'gamble', this.actionGamble);
+    this.channelEvents.push({wordMatch: CONF.CONST.CMDTRIGGER + 'slap', callback: this.actionSlap});
+    this.channelEvents.push({wordMatch: CONF.CONST.CMDTRIGGER + 'ress', callback: this.actionHeal});
+    this.channelEvents.push({wordMatch: CONF.CONST.CMDTRIGGER + 'beer', callback: this.actionDrinkBeer});
+    this.channelEvents.push({wordMatch: CONF.CONST.CMDTRIGGER + 'money', callback: this.actionSayMoneyStats});
+    this.channelEvents.push({wordMatch: CONF.CONST.CMDTRIGGER + 'stats', callback: this.actionSayStats});
+    this.channelEvents.push({wordMatch: CONF.CONST.CMDTRIGGER + 'gamble', callback: this.actionGamble});
+    this.channelEvents.push({wordMatch: CONF.CONST.CMDTRIGGER + 'ladder', callback: this.actionSayLadder});
+    this.channelEvents.push({wordMatch: CONF.CONST.CMDTRIGGER + 'thegame', callback: this.actionSayAvailCommands});
 
-    this.listenChannelMessage(CONF.CONST.CHANNEL, CONF.CONST.CMDTRIGGER + 'beer', this.actionDrinkBeer);
-    this.listenChannelMessage(CONF.CONST.CHANNEL, CONF.CONST.CMDTRIGGER + 'ladder', this.actionSayLadder);
-    this.listenChannelMessage(CONF.CONST.CHANNEL, CONF.CONST.CMDTRIGGER + 'stats', this.actionSayStats);
+    this.client.addListener('message#' + CONF.CONST.CHANNEL, function(nick, message) {
+        this.channelEvents.forEach(function (object) {
+            if (message.indexOf(object.wordMatch) === 0) {
+                object.callback(nick, message);
+            }
+        });
+    });
 
     this.client.addListener('names', this.updateOnChannel);
     this.client.addListener('join#' + CONF.CONST.CHANNEL, this.addUserToChannel);
@@ -376,5 +422,14 @@ SLAPBOT.prototype.startListening = function startListening() {
         console.log('error: ', message);
     });
     
+    setInterval(function () {
+      fs.writeFile(CONF.CONST.RECORDS, JSON.stringify(THAT.RECORDS), function (err) {
+        if (err) {
+          console.log('Error writing to file');
+        } else {
+          console.log('Wrote to results file. ');
+        }
+      });
+    }, CONF.CONST.BACKUP);
     
 };
