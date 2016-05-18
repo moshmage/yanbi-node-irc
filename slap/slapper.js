@@ -18,7 +18,7 @@ var SLAPBOT = module.exports = function SLAPBOT() {
     this.ONCHANNEL = [];
     this.PUB = [];
     this.channelEvents = [];
-
+    this.IGNORE = {};
     this.client = new irc.Client('irc.snoonet.org', CONF.CONST.MYNICK, { channels: ['#' + CONF.CONST.CHANNEL], debug: true });
 
 };
@@ -119,9 +119,7 @@ SLAPBOT.prototype.actionSlap = function (fromNick, message) {
         slap.crit = dice.roll('1d20').result === 20;
         slap.damage = dice.roll('1d6').result + fromNick.str;
         slap.moneyDrop = Math.floor((Math.random() * slapped.coins / CONF.CONST.STEALDIVIDER) + 1);
-        slapped.coins -= slap.moneyDrop || 0;
-        fromNick.coins += slap.moneyDrop || 0;
-        
+
         if (fromNick.drunk !== false) {
             slap.damage += fromNick.drunk;
             if (fromNick.drunk > 10) {
@@ -137,6 +135,9 @@ SLAPBOT.prototype.actionSlap = function (fromNick, message) {
         }
         
         slapped.health -= slap.damage;
+
+        slapped.coins -= slap.moneyDrop || 0;
+        fromNick.coins += slap.moneyDrop || 0;
         
         THAT.speakOut(fromNick.nick + ' slaps <' + slapped.nick + '> for ' + slap.damage + 'hp');
         THAT.speakIn(fromNick.nick, 'you stole ' + slap.moneyDrop + 'coins from <' + slapped.nick + '>');
@@ -147,7 +148,7 @@ SLAPBOT.prototype.actionSlap = function (fromNick, message) {
             slapped.deaths += 1;
             fromNick.kills += 1;
         }
-        
+
         THAT.RECORDS[slapped.nick] = slapped;
         THAT.RECORDS[fromNick.nick] = fromNick;
 
@@ -271,6 +272,7 @@ SLAPBOT.prototype.actionGamble = function (nick, message) {
         THAT.RECORDS['-gambleTehBunny-'].coins += parseInt(gambledMoney,10);
         THAT.speakOut('Better luck next time, ' + nick.nick + '.');
         THAT.speakOut('tehBunny value is ' + THAT.RECORDS['-gambleTehBunny-'].coins + 'coins.');
+        nick.coins -= gambledMoney;
     }
 
 };
@@ -334,7 +336,7 @@ SLAPBOT.prototype.actionDrinkBeer = function (nick, message) {
     
     nick = THAT.RECORDS[message[1]] || THAT.RECORDS[nick] || THAT.makeNewRecord(nick);
 
-    if (THAT.PUB.indexOf(nick) < 0) {
+    if (THAT.PUB.indexOf(nick.nick) < 0) {
         THAT.speakOut('Members only...');
         return false;
     }
@@ -403,9 +405,21 @@ SLAPBOT.prototype.startListening = function startListening() {
     this.channelEvents.push({wordMatch: CONF.CONST.CMDTRIGGER + 'thegame', callback: this.actionSayAvailCommands});
 
     this.client.addListener('message#' + CONF.CONST.CHANNEL, function(nick, message) {
+        var minsPassed;
+        
+        if (!THAT.IGNORE[nick]) {
+            THAT.IGNORE[nick] = new Date().getTime();
+        } else {
+            minsPassed = (new Date().getTime() - THAT.IGNORE[nick]);
+            if (minsPassed < CONF.CONST.IGNORETIME) {
+                return false;
+            }
+        }
+        
         THAT.channelEvents.forEach(function (object) {
             if (message.indexOf(object.wordMatch) === 0) {
                 object.callback(nick, message);
+                THAT.IGNORE[nick] = new Date().getTime();
             }
         });
     });
