@@ -145,8 +145,8 @@ SLAPBOT.prototype.actionSlap = function (fromNick, message) {
         
         slapped.health -= slap.damage;
 
-        slapped.coins -= slap.moneyDrop || 0;
-        fromNick.coins += slap.moneyDrop || 0;
+        slapped.coins -= slap.moneyDrop;
+        fromNick.coins += slap.moneyDrop;
         
         THAT.speakOut(fromNick.nick + ' slaps <' + slapped.nick + '> for ' + slap.damage + 'hp');
         THAT.speakIn(fromNick.nick, 'you stole ' + slap.moneyDrop + 'coins from <' + slapped.nick + '>');
@@ -417,25 +417,27 @@ SLAPBOT.prototype.startListening = function startListening() {
     this.client.addListener('message#' + CONF.CONST.CHANNEL, function(nick, message) {
         var minsPassed;
         
-        if (!THAT.IGNORE[nick]) {
-            THAT.IGNORE[nick] = { last: new Date().getTime(), warned: false };
-        } else {
-            minsPassed = (new Date().getTime() - THAT.IGNORE[nick].last);
-            if (minsPassed < CONF.CONST.IGNORETIME) {
-                if (!THAT.IGNORE[nick].warned) {
-                    THAT.speakIn(nick, 'You\'r on a cooldown, chill :)');
+        if (message.indexOf(CONF.CONST.CMDTRIGGER) === 0) {
+            if (!THAT.IGNORE[nick]) {
+                THAT.IGNORE[nick] = { last: new Date().getTime(), warned: false };
+            } else {
+                minsPassed = (new Date().getTime() - THAT.IGNORE[nick].last);
+                if (minsPassed < CONF.CONST.IGNORETIME) {
+                    if (!THAT.IGNORE[nick].warned) {
+                        THAT.speakIn(nick, 'You are on a cooldown, chill :)');
+                    }
+                    return false;
                 }
-                return false;
             }
+            
+            THAT.channelEvents.forEach(function (object) {
+                if (message.indexOf(object.wordMatch) === 0) {
+                    object.callback(nick, message);
+                    THAT.IGNORE[nick] = { last: new Date().getTime(), warned: false };
+                    console.log({event: object.wordMatch, nick: nick, date: new Date().getTime()});
+                }
+            });
         }
-        
-        THAT.channelEvents.forEach(function (object) {
-            if (message.indexOf(object.wordMatch) === 0) {
-                object.callback(nick, message);
-                THAT.IGNORE[nick] = new Date().getTime();
-                console.log({event: object.wordMatch, nick: nick, date: new Date().getTime()});
-            }
-        });
     });
 
     this.client.addListener('names', this.updateOnChannel);
