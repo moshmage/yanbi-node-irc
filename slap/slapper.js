@@ -419,10 +419,12 @@ SLAPBOT.prototype.startListening = function startListening() {
         
         if (message.indexOf(CONF.CONST.CMDTRIGGER) === 0) {
             if (!THAT.IGNORE[nick]) {
-                THAT.IGNORE[nick] = { last: new Date().getTime(), warned: false };
+                THAT.IGNORE[nick] = { 
+                    warned: false,
+                    count: 1
+                };
             } else {
-                minsPassed = (new Date().getTime() - THAT.IGNORE[nick].last);
-                if (minsPassed < CONF.CONST.IGNORETIME) {
+                if (THAT.IGNORE[nick].count > CONF.FLOOD.MAXCMDS) {
                     if (!THAT.IGNORE[nick].warned) {
                         THAT.speakIn(nick, 'You are on a cooldown, chill :)');
                     }
@@ -433,7 +435,14 @@ SLAPBOT.prototype.startListening = function startListening() {
             THAT.channelEvents.forEach(function (object) {
                 if (message.indexOf(object.wordMatch) === 0) {
                     object.callback(nick, message);
-                    THAT.IGNORE[nick] = { last: new Date().getTime(), warned: false };
+                    
+                    THAT.IGNORE[nick].warned = false;
+                    THAT.IGNORE[nick].count += 1;
+                    
+                    if (THAT.IGNORE[nick].count > CONF.FLOOD.MAXCMDS) {
+                        THAT.IGNORE[nick].count = CONF.FLOOD.INCREASE;
+                    }
+                    
                     console.log({event: object.wordMatch, nick: nick, date: new Date().getTime()});
                 }
             });
@@ -461,5 +470,13 @@ SLAPBOT.prototype.startListening = function startListening() {
         }
       });
     }, CONF.CONST.BACKUP);
+    
+    setInterval(function () {
+        THAT.IGNORE.forEach(function (object) {
+            if (object.count) {
+                object.count -= 1;
+            }
+        });
+    }, CONF.FLOOD.BETWEENMS);
     
 };
