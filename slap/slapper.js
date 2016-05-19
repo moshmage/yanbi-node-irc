@@ -472,9 +472,9 @@ SLAPBOT.prototype.startListening = function startListening() {
     }, CONF.CONST.BACKUP);
     
     setInterval(function () {
-        THAT.IGNORE.forEach(function (object) {
-            if (object.count) {
-                object.count -= 1;
+        Object.keys(THAT.IGNORE).forEach(function(name) {
+            if (THAT.IGNORE[name].count > 0) {
+                THAT.IGNORE[name].count -= 1;
             }
         });
     }, CONF.FLOOD.BETWEENMS);
