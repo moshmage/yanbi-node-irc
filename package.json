@@ -1,13 +1,13 @@
 {
   "name": "node-slap-bot",
   "version": "1.0.0",
-  "description": "",
+  "description": "Slap bot irc game",
   "main": "slapbot.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node backhander.js"
   },
-  "author": "",
+  "author": "moshmage@gmail.com",
   "license": "ISC",
   "dependencies": {
     "irc": "^0.5.0",

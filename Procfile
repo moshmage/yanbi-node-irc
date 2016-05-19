@@ -1,2 +1,1 @@
-npm install
-node slapbot.js
+bot: node slapbot.js
