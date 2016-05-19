@@ -428,6 +428,7 @@ SLAPBOT.prototype.startListening = function startListening() {
                 if (THAT.IGNORE[nick].count > CONF.FLOOD.MAXCMDS) {
                     if (!THAT.IGNORE[nick].warned) {
                         THAT.speakIn(nick, 'You are on a cooldown, chill :)');
+                        THAT.IGNORE[nick].warned = true;
                     }
                     return false;
                 }
