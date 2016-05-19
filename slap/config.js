@@ -18,6 +18,12 @@ var CONF = module.exports = function () {
         BACKUP: 1800 * 1000
     };
     
+    this.FLOOD = {
+        MAXCMDS: 2,
+        BETWEENMS: 25 * 1000,
+        INCREASE: 5
+    };
+    
     this.PLAYERCONST = {
         MAXHEALTH: 50,
         MINSTR: 1,
