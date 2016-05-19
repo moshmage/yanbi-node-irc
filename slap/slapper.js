@@ -207,7 +207,7 @@ SLAPBOT.prototype.actionSayMoneyStats = function (nick, message) {
     if (coins <= 0) {
         THAT.RECORDS[nick].coins = CONF.PLAYERCONST.MINCASH;
         coins = CONF.PLAYERCONST.MINCASH;
-        THAT.speakIn(nick, 'You have new currency! 15coins. You\'ll be able to use !money again in 24hrs');
+        THAT.speakIn(nick, 'You have new currency! ' + CONF.PLAYERCONST.MINCASH + 'coins. You\'ll be able to use !money again in 24hrs');
         THAT.RECORDS[nick].lastBank = new Date().getTime();
     }
     
@@ -422,7 +422,7 @@ SLAPBOT.prototype.startListening = function startListening() {
             if (!THAT.IGNORE[nick]) {
                 THAT.IGNORE[nick] = { 
                     warned: false,
-                    count: 1
+                    count: 0
                 };
             } else {
                 if (THAT.IGNORE[nick].count > CONF.FLOOD.MAXCMDS) {
