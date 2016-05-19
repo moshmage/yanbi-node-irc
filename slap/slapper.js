@@ -197,9 +197,16 @@ SLAPBOT.prototype.actionSayMoneyStats = function (nick, message) {
     }
     
     if (THAT.RECORDS[nick].lastBank) {
-        daysPassed = THAT.RECORDS[nick].lastBank - new Date().getTime() / CONF.CONST.DAY;
-        if (daysPassed < 1) {
+        daysPassed = THAT.RECORDS[nick].lastBank - new Date().getTime();
+        if (daysPassed < CONF.CONST.DAY) {
             THAT.speakOut(nick + ', bank\'s still closed for you.');
+            
+            if (coins > 0) {
+                THAT.speakOut('<' + nick + '> has ' + coins + 'coins');
+            } else {
+                THAT.speakOut('<' + nick + '> has no cash, go about and !slap some people.');
+            }
+            
             return false;
         }
     }
