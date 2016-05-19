@@ -102,7 +102,7 @@ SLAPBOT.prototype.actionSlap = function (fromNick, message) {
     
     if (dice.roll('1d6').result < dice.roll('1d6').result) {
         THAT.speakOut('*SWOOSH*');
-        if (!fromNick.drunk && dice.roll('1d6').result === 1) {
+        if (fromNick.drunk !== false && dice.roll('1d6').result === 1) {
             slap.damage = fromNick.drunk * CONF.CONST.DAMAGEFROMDRUNK;
             fromNick.health -= slap.damage;
             
@@ -199,7 +199,7 @@ SLAPBOT.prototype.actionSayMoneyStats = function (nick, message) {
     if (THAT.RECORDS[nick].lastBank) {
         daysPassed = THAT.RECORDS[nick].lastBank - new Date().getTime();
         if (daysPassed < CONF.CONST.DAY) {
-            THAT.speakOut(nick + ', bank\'s still closed for you.');
+            THAT.speakIn(nick, 'bank\'s still closed for you.');
             
             if (coins > 0) {
                 THAT.speakOut('<' + nick + '> has ' + coins + 'coins');
@@ -379,7 +379,8 @@ SLAPBOT.prototype.actionDrinkBeer = function (nick, message) {
     } else {
         THAT.speakOut('Drunkard notice: If you fall, you\'ll die. Please, don\'t drink and slap.');
     }
-    THAT.speakIn(fromNick,'You lost ' + costs + 'coins to tehBunny');
+    
+    THAT.speakIn(fromNick,'You lost ' + costs + 'coins to tehBunny and bought ' + amount + ' of beers');
     
 };
 
