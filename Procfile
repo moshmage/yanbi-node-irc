@@ -1,1 +1,1 @@
-bot: node slapbot.js
+bot: node backhander.js
