@@ -282,6 +282,7 @@ SLAPBOT.prototype.actionGamble = function (nick, message) {
         THAT.speakOut('Better luck next time, ' + nick.nick + '.');
         THAT.speakOut('tehBunny value is ' + THAT.RECORDS['-gambleTehBunny-'].coins + 'coins.');
         nick.coins -= gambledMoney;
+        THAT.RECORDS[nick.nick] = nick;
     }
 
 };
