@@ -305,14 +305,16 @@ SLAPBOT.prototype.actionSayLadder = function () {
     var score; var string;
     
     Object.keys(THAT.RECORDS).forEach(function (nickname, index) {
-        if (THAT.RECORDS[nickname].kills < THAT.RECORDS[nickname].deaths) {
-            score = (THAT.RECORDS[nickname].kills - (0.5 * THAT.RECORDS[nickname].deaths)) * THAT.RECORDS[nickname].coins / 100;
-        } else {
-            score = (THAT.RECORDS[nickname].kills - THAT.RECORDS[nickname].deaths) * THAT.RECORDS[nickname].coins / 100;
-        }
-        
-        if (score > 0) {
-            ladder.push({nick: nickname, score: score});
+        if (nickname !== '-gambleTehBunny-') {
+            if (THAT.RECORDS[nickname].kills < THAT.RECORDS[nickname].deaths) {
+                score = (THAT.RECORDS[nickname].kills - (0.5 * THAT.RECORDS[nickname].deaths)) * THAT.RECORDS[nickname].coins / 100;
+            } else {
+                score = (THAT.RECORDS[nickname].kills - THAT.RECORDS[nickname].deaths) * THAT.RECORDS[nickname].coins / 100;
+            }
+            
+            if (score > 0) {
+                ladder.push({nick: nickname, score: score});
+            }
         }
     });
     
