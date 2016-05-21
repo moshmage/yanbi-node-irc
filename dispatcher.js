@@ -20,7 +20,7 @@ function handleMessageToChannelEvent(nick, to, text) {
     Eventer.HOOKS.EVENTSNET['message#'].forEach(function (action) {
         catchOnIndex = action.catchOnIndex || 0;
         if (text.indexOf(action.wordMatch) === catchOnIndex) {
-            action.callback(nick, text);
+            action.callback(nick, to, text);
         }
     });
 }

@@ -85,6 +85,7 @@ Eventer.catchEvent('notice',';rehash', function (nick, to, message) {
 
     // todo: make it so we can unload every module
     if (message.length  === 1) {
+        loadModulesFolder(true);
         Eventer.client.say(nick, 'You have to specify the module');
         return false;
     }
