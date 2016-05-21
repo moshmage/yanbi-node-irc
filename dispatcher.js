@@ -17,7 +17,7 @@ Dispatcher = module.exports = function DISPATCHER() {
 
 function handleMessageToChannelEvent(nick, to, text) {
     var catchOnIndex;
-    Eventer.EVENTSNET['message#'].forEach(function (action) {
+    Eventer.HOOKS.EVENTSNET['message#'].forEach(function (action) {
         catchOnIndex = action.catchOnIndex || 0;
         if (text.indexOf(action.wordMatch) === catchOnIndex) {
             action.callback(nick, text);
@@ -26,7 +26,7 @@ function handleMessageToChannelEvent(nick, to, text) {
 }
 
 function handleNamesEvent(channel, nicks) {
-    Eventer.EVENTSNET['names'].forEach(function (action) {
+    Eventer.HOOKS.EVENTSNET['names'].forEach(function (action) {
         if (action.catchOnIndex === true) {
             nicks.forEach(function (nick) {
                 if (nick === action.wordMatch) {
@@ -42,7 +42,7 @@ function handleNamesEvent(channel, nicks) {
 }
 
 function joinPartHandle(eventType, channel, nick) {
-    Eventer.EVENTSNET[eventType].forEach(function (action) {
+    Eventer.HOOKS.EVENTSNET[eventType].forEach(function (action) {
         if (action.wordMatch === channel || action.wordMatch === nick) {
             console.log('sending callback');
             action.callback(channel, nick);
@@ -64,6 +64,6 @@ Dispatcher.prototype.initialize = function (EventService) {
     Eventer.createEventType('join', handleJoinEvent);
     Eventer.createEventType('part', handlePartEvent);
     Eventer.createEventType('names', handleNamesEvent);
-    Eventer.createEventType('message#', handleMessageToChannelEvent);
+    // Eventer.createEventType('message#', handleMessageToChannelEvent);
 
 };

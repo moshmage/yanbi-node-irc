@@ -7,7 +7,7 @@ var CONF = module.exports = function () {
     this.CONST = {
         CMDTRIGGER: '!',
         RECORDS: __dirname + '/records/slap-records.json',
-        MYNICK: 'mmBot',
+        MYNICK: 'backhander',
         CHANNEL: 'mmdev',
         GAMBLEMULTIPLIER: 2,
         STEALDIVIDER: 3,

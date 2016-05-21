@@ -9,21 +9,16 @@ var Eventer;
  */
 Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
     'use strict';
-    var self = this;
-    if (!(this instanceof Eventer)) {
-        return new Eventer(IrcLib, IrcConf);
-    }
+    var self = {
+        EVENTS : {},
+        EVENTSNET : {},
+        conf : {}
+    };
 
-    this.EVENTS = {};
-    this.EVENTSNET = {};
-    this.conf = {};
-
-    this.client = new IrcLib.Client(IrcConf.server, IrcConf.selfNickname, {
+    var client = new IrcLib.Client(IrcConf.server, IrcConf.selfNickname, {
         channels: IrcConf.channelsArray,
         debug: IrcConf.debug
     });
-
-
 
     /**
      * Adds a new Parent Event as EventListener of Irc.Client() object
@@ -32,13 +27,13 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
      * @param callback {function}   a callback function to be invoked
      * @returns {boolean}           false if eventType already exists
      */
-    this.createEventType = function (eventType, callback) {
-        if (typeof this.EVENTS[eventType] === "function") {
+    var createEventType = function (eventType, callback) {
+        if (typeof self.EVENTS[eventType] === "function") {
             return false;
         }
         self.EVENTS[eventType] = callback;
         self.EVENTSNET[eventType] = [];
-        self.client.addListener(eventType, self.EVENTS[eventType]);
+        client.addListener(eventType, self.EVENTS[eventType]);
         return true;
     };
 
@@ -52,7 +47,7 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
      * @param callback              a callback function to be invoked
      * @returns {boolean}           returns false if the Parent Event does not exist
      */
-    this.catchEvent = function (eventType, wordMatch, callback) {
+    var catchEvent = function (eventType, wordMatch, callback) {
         if (!self.EVENTS[eventType] || !wordMatch || !callback) {
             return false;
         }
@@ -70,7 +65,7 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
      * @param wordMatch {string}
      * @returns {boolean}
      */
-    this.releaseEvent = function (eventType, wordMatch) {
+    var releaseEvent = function (eventType, wordMatch) {
         var found;
         if (!self.EVENTS[eventType] || !self.EVENTSNET[eventType]) {
             return false;
@@ -96,21 +91,19 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
      * @param IrcLib    require('irc')
      * @param IrcConf   {object}        {channelArray: [], selfNickname: 'string', debug: false, server: 'string' }
      */
-    this.startIrcService = function () {
-        self.IrcConf = IrcConf;
-
-
-        self.client.addListener('registered', function () {
-            console.log('Connection to server made');
-            if (IrcConf.nickserv) {
-                self.client.say('NickServ','identify ' + IrcConf.nickserv);
-            }
-        });
-
-        self.client.addListener('error', function (message) {
+    var startIrcService = function () {
+        client.addListener('error', function (message) {
             console.log('error: ', message);
         });
     };
     
+    return {
+        HOOKS: self,
+        client: client,
+        startIrcService: startIrcService,
+        releaseEvent: releaseEvent,
+        catchEvent: catchEvent,
+        createEventType: createEventType
+    }
 };
 

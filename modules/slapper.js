@@ -494,6 +494,6 @@ SLAPBOT.prototype.initialize = function startListening(EventService) {
         });
     }, CONF.FLOOD.BETWEENMS);
 
-    EventService.client.join(CONF.CONST.CHANNEL);
-    
+    EventService.client.join('#' + CONF.CONST.CHANNEL);
+    console.log('Initialized');
 };
