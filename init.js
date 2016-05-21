@@ -38,29 +38,34 @@ function initializeModule(module, rehash) {
     }
 }
 
-/** Hook dispatcher to the Eventer machine */
-Dispatcher.initialize(Eventer);
-
-/**
- * Hook on the 'registered' event from node-irc
- * and use that to load our modules
- */
-Eventer.createEventType('registered', function () {
-
+function loadModulesFolder (rehash) {
     modulesFolderContent = fs.readdirSync('modules/');
     modulesFolderContent.forEach(function (module) {
         if (module.indexOf('_') === 0) {
             console.log('Ignored',module,'because of trailing underscore');
             return false;
         }
-        initializeModule(module);
+        if (!Modules[module]) rehash = false;
+
+        initializeModule(module, rehash);
     });
 
     if (ircConf.nickserv) {
         Eventer.client.say('NickServ','identify ' + ircConf.nickserv);
     }
 
+}
+
+/**
+ * Hook on the 'registered' event from node-irc
+ * and use that to load our modules
+ */
+Eventer.createEventType('registered', function () {
+    loadModulesFolder(false)
 });
+
+/** Hook dispatcher to the Eventer machine */
+Dispatcher.initialize(Eventer);
 
 
 /**
@@ -80,6 +85,7 @@ Eventer.catchEvent('notice',';rehash', function (nick, to, message) {
 
     // todo: make it so we can unload every module
     if (message.length  === 1) {
+        Eventer.client.say(nick, 'You have to specify the module');
         return false;
     }
 
