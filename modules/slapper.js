@@ -2,12 +2,12 @@
  * Created by Mosh Mage on 5/17/2016.
  */
 'use strict';
-var irc = require('irc');
 var fs = require('fs');
-var CONF = require('./config.js')();
+var CONF = require('../conf/slapbotconf.js')();
 var dice = require('rpg-dice');
 var isNumeric = require("isnumeric");
 var THAT = null;
+var Eventer;
 
 var SLAPBOT = module.exports = function SLAPBOT() {
     if (!(this instanceof SLAPBOT)) {
@@ -19,8 +19,10 @@ var SLAPBOT = module.exports = function SLAPBOT() {
     this.PUB = [];
     this.channelEvents = [];
     this.IGNORE = {};
-    this.client = new irc.Client('irc.snoonet.org', CONF.CONST.MYNICK, { channels: ['#' + CONF.CONST.CHANNEL], debug: false });
 
+    this.name = "SlapBot";
+    this.author = "moshmage@gmail.com";
+    this.version = "1.5";
 };
 
 SLAPBOT.prototype.stringToArray = function (string) {
@@ -35,11 +37,11 @@ SLAPBOT.prototype.listenChannelMessage = function (what, callback) {
 };
 
 SLAPBOT.prototype.speakOut = function (text) {
-    THAT.client.say('#' + CONF.CONST.CHANNEL, text);
+    Eventer.client.say('#' + CONF.CONST.CHANNEL, text);
 };
 
 SLAPBOT.prototype.speakIn = function (nick, text) {
-    THAT.client.notice(nick, text);
+    Eventer.client.notice(nick, text);
 };
 
 SLAPBOT.prototype.isOnChannel = function (nickname) {
@@ -224,7 +226,7 @@ SLAPBOT.prototype.actionSayMoneyStats = function (nick, message) {
 SLAPBOT.prototype.actionSayAvailCommands = function () {
     var string = '';
     THAT.channelEvents.forEach(function(object, index){
-        string += object.wordMatch
+        string += object.wordMatch;
         if (index < THAT.channelEvents.length - 1) {
             string += ', ';
         }
@@ -413,9 +415,10 @@ SLAPBOT.prototype.removeUserFromChannel = function (nick) {
     THAT.ONCHANNEL.slice(index, 1);
 };
 
-SLAPBOT.prototype.startListening = function startListening() {
+SLAPBOT.prototype.initialize = function startListening(EventService) {
     
     THAT = this;
+    Eventer = EventService;
     this.channelEvents.push({wordMatch: CONF.CONST.CMDTRIGGER + 'slap', callback: this.actionSlap});
     this.channelEvents.push({wordMatch: CONF.CONST.CMDTRIGGER + 'ress', callback: this.actionHeal});
     this.channelEvents.push({wordMatch: CONF.CONST.CMDTRIGGER + 'beer', callback: this.actionDrinkBeer});
@@ -425,9 +428,9 @@ SLAPBOT.prototype.startListening = function startListening() {
     this.channelEvents.push({wordMatch: CONF.CONST.CMDTRIGGER + 'ladder', callback: this.actionSayLadder});
     this.channelEvents.push({wordMatch: CONF.CONST.CMDTRIGGER + 'thegame', callback: this.actionSayAvailCommands});
 
-    this.client.addListener('message#' + CONF.CONST.CHANNEL, function(nick, message) {
+    EventService.createEventType('message#' + CONF.CONST.CHANNEL, function(nick, message) {
         var minsPassed;
-        
+        console.log('original');
         if (message.indexOf(CONF.CONST.CMDTRIGGER) === 0) {
             if (!THAT.IGNORE[nick]) {
                 THAT.IGNORE[nick] = { 
@@ -461,15 +464,15 @@ SLAPBOT.prototype.startListening = function startListening() {
         }
     });
 
-    this.client.addListener('names', this.updateOnChannel);
-    this.client.addListener('join#' + CONF.CONST.CHANNEL, this.addUserToChannel);
-    this.client.addListener('part#' + CONF.CONST.CHANNEL, this.removeUserFromChannel);
-    
-    this.client.addListener('registered', function () {
+    EventService.client.addListener('names', this.updateOnChannel);
+    EventService.client.addListener('join#' + CONF.CONST.CHANNEL, this.addUserToChannel);
+    EventService.client.addListener('part#' + CONF.CONST.CHANNEL, this.removeUserFromChannel);
+
+    EventService.client.addListener('registered', function () {
         console.log('Hooked :)');
     });
-    
-    this.client.addListener('error', function(message) {
+
+    EventService.client.addListener('error', function(message) {
         console.log('error: ', message);
     });
     
