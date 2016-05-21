@@ -20,6 +20,10 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
         debug: IrcConf.debug
     });
 
+    client.addListener('error', function (message) {
+        console.log('error: ', message);
+    });
+
     /**
      * Adds a new Parent Event as EventListener of Irc.Client() object
      *
@@ -72,35 +76,24 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
         }
 
         self.EVENTSNET[eventType].some(function(object, index){
-            if (object.wordMatch === wordMatch && wordMatch.word || object.wordMatch === wordMatch) {
+            if (object.wordMatch === wordMatch) {
                 found = index;
                 return true;
             }
         });
 
-        if (found) {
-            self.EVENTSNET[eventType].slice(found, 1);
+        if (found >= 0) {
+            self.EVENTSNET[eventType].splice(found,1);
+            console.log(self.EVENTSNET[eventType]);
             return true;
         }
 
         return false;
     };
 
-    /**
-     * Starts the basic listeners and assigns the Irc.Client to itself
-     * @param IrcLib    require('irc')
-     * @param IrcConf   {object}        {channelArray: [], selfNickname: 'string', debug: false, server: 'string' }
-     */
-    var startIrcService = function () {
-        client.addListener('error', function (message) {
-            console.log('error: ', message);
-        });
-    };
-    
     return {
         HOOKS: self,
         client: client,
-        startIrcService: startIrcService,
         releaseEvent: releaseEvent,
         catchEvent: catchEvent,
         createEventType: createEventType

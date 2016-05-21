@@ -22,6 +22,8 @@ function selfJoinedChannel(channel, nick) {
 EXAMPLE.prototype.initialize = function (EventService) {
     Eventer = EventService;
     Eventer.catchEvent('join','mmBot',selfJoinedChannel);
-    console.log('initialized');
+};
 
+EXAMPLE.prototype.rehasher = function () {
+    Eventer.releaseEvent('join','mmBot');
 };

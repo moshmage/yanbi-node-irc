@@ -44,10 +44,19 @@ function handleNamesEvent(channel, nicks) {
 function joinPartHandle(eventType, channel, nick) {
     Eventer.HOOKS.EVENTSNET[eventType].forEach(function (action) {
         if (action.wordMatch === channel || action.wordMatch === nick) {
-            console.log('sending callback');
             action.callback(channel, nick);
         }
     })
+}
+
+function handleNoticeEvent(nick, to, text) {
+    var catchOnIndex;
+    Eventer.HOOKS.EVENTSNET['notice'].forEach(function (action) {
+        catchOnIndex = action.catchOnIndex || 0;
+        if (text.indexOf(action.wordMatch) === catchOnIndex || action.wordMatch === nick && nick.toLowerCase()) {
+            action.callback(nick, to, text);
+        }
+    });
 }
 
 function handleJoinEvent(channel, nick) {
@@ -64,6 +73,7 @@ Dispatcher.prototype.initialize = function (EventService) {
     Eventer.createEventType('join', handleJoinEvent);
     Eventer.createEventType('part', handlePartEvent);
     Eventer.createEventType('names', handleNamesEvent);
+    Eventer.createEventType('notice', handleNoticeEvent);
     Eventer.createEventType('message#', handleMessageToChannelEvent);
 
 };
