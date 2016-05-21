@@ -464,7 +464,7 @@ SLAPBOT.prototype.initialize = function startListening(EventService) {
         }
     });
 
-    EventService.createEventType('names', this.updateOnChannel);
+    Eventer.catchEvent('names', '#' + CONF.CONST.CHANNEL, this.updateOnChannel);
     EventService.createEventType('join#' + CONF.CONST.CHANNEL, this.addUserToChannel);
     EventService.createEventType('part#' + CONF.CONST.CHANNEL, this.removeUserFromChannel);
 

@@ -34,8 +34,8 @@ function handleNamesEvent(channel, nicks) {
                 }
             });
         }
-        
-        if (action.wordMatch === channel) {
+
+        if (action.wordMatch.toLowerCase() == channel.toLowerCase()) {
             action.callback(channel, nicks);
         }
     })
