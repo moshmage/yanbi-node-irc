@@ -102,6 +102,9 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
 
         self.client.addListener('registered', function () {
             console.log('Connection to server made');
+            if (IrcConf.nickserv) {
+                self.client.say('NickServ','identify ' + IrcConf.nickserv);
+            }
         });
 
         self.client.addListener('error', function (message) {

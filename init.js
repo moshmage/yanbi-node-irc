@@ -5,11 +5,13 @@ var irc = require('irc');
 var fs = require('fs');
 // var ircConf = require('./irc.conf.js')();
 var Eventer = require('./eventer.js')(irc, {
-    debug: true,
+    debug: false,
     server: 'irc.snoonet.org',
     channelsArray: ['#mmdev'],
-    selfNickname: 'mmBot'
+    selfNickname: 'backhander',
+    nickserv: 'null'
 });
+
 var Dispatcher = require('./dispatcher.js')();
 
 var modulesFolderContent;
