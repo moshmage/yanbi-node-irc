@@ -64,6 +64,6 @@ Dispatcher.prototype.initialize = function (EventService) {
     Eventer.createEventType('join', handleJoinEvent);
     Eventer.createEventType('part', handlePartEvent);
     Eventer.createEventType('names', handleNamesEvent);
-    // Eventer.createEventType('message#', handleMessageToChannelEvent);
+    Eventer.createEventType('message#', handleMessageToChannelEvent);
 
 };

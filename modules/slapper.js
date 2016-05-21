@@ -430,7 +430,7 @@ SLAPBOT.prototype.initialize = function startListening(EventService) {
 
     EventService.createEventType('message#' + CONF.CONST.CHANNEL, function(nick, message) {
         var minsPassed;
-        console.log('original');
+
         if (message.indexOf(CONF.CONST.CMDTRIGGER) === 0) {
             if (!THAT.IGNORE[nick]) {
                 THAT.IGNORE[nick] = { 
@@ -464,9 +464,9 @@ SLAPBOT.prototype.initialize = function startListening(EventService) {
         }
     });
 
-    EventService.client.addListener('names', this.updateOnChannel);
-    EventService.client.addListener('join#' + CONF.CONST.CHANNEL, this.addUserToChannel);
-    EventService.client.addListener('part#' + CONF.CONST.CHANNEL, this.removeUserFromChannel);
+    EventService.createEventType('names', this.updateOnChannel);
+    EventService.createEventType('join#' + CONF.CONST.CHANNEL, this.addUserToChannel);
+    EventService.createEventType('part#' + CONF.CONST.CHANNEL, this.removeUserFromChannel);
 
     EventService.client.addListener('registered', function () {
         console.log('Hooked :)');

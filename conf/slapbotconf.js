@@ -8,7 +8,7 @@ var CONF = module.exports = function () {
         CMDTRIGGER: '!',
         RECORDS: __dirname + '/records/slap-records.json',
         MYNICK: 'backhander',
-        CHANNEL: 'mmdev',
+        CHANNEL: 'portugal',
         GAMBLEMULTIPLIER: 2,
         STEALDIVIDER: 3,
         BOXES: 3,
