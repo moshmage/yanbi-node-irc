@@ -2,7 +2,7 @@
 module.exports = {
     debug: false,
     server: 'irc.snoonet.org',
-    channelsArray: ['#mmdev'],
+    channelsArray: ['#mmDev'],
     selfNickname: 'suecada',
     nickserv: false,
     owner: 'r3dsmile'
