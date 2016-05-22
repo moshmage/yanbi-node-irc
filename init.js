@@ -9,6 +9,8 @@ var Eventer = new require('./eventer.js')(irc, ircConf);
 var Dispatcher = require('./dispatcher.js')();
 
 var ModuleMan = require('./module-manager')();
+
+Dispatcher.initialize(Eventer);
 ModuleMan.initialize(Eventer);
 
 /**
@@ -23,5 +25,4 @@ Eventer.createEventType('registered', function () {
     }
 });
 
-/** Hook dispatcher to the Eventer machine */
-Dispatcher.initialize(Eventer);
+
