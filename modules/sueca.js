@@ -92,7 +92,7 @@ function dealHand(gameChannel) {
 function startNewGame(nick) {
     var channelName;
     do {
-        channelName = "sueca" + Math.floor(Math.random() * 10000);
+        channelName = "#sueca" + Math.floor(Math.random() * 10000);
     } while(_SUECA.GAME[channelName] !== undefined);
 
     _SUECA.GAME[channelName] = {
@@ -280,6 +280,18 @@ function choosePlayerTeam(playerList) {
     }
 }
 
+function findPlayer(nick, channel) {
+    var found;
+    _SUECA.GAME[channel].PLAYERS.some(function (player) {
+        if (player.nick === nick) {
+            found = player.nick;
+            return true;
+        }
+    });
+
+    return found;
+}
+
 function parseSuecaCommand(nick, channel, message) {
     message = message.split(' ');
     var channelName, team;
@@ -287,20 +299,25 @@ function parseSuecaCommand(nick, channel, message) {
     if (message[1] === 'start') {
         channelName = startNewGame(nick);
         if (channelName) {
-            Eventer.client.say(channel, 'Foi criado o ' + channelName + ' - O joso irá começar dentro de 1m');
+            Eventer.client.say(channel, 'Foi criado o ' + channelName + ' - O jogo irá começar dentro de 1m');
         } else {
             Eventer.client.say(channel, 'Não foi possivel criar o canal...');
         }
     }
 
     if (message[1] === 'join' && _SUECA.GAME[channel]) {
-        team = choosePlayerTeam(_SUECA.GAME[channel].PLAYERS);
-        _SUECA.GAME[channel].PLAYERS.push({nick: nick, hand: [], team: team});
-        Eventer.client.say(channel, nick + ' entra para a equipa ' + team);
+        if (!findPlayer(nick, channel)) {
+            team = choosePlayerTeam(_SUECA.GAME[channel].PLAYERS);
+            _SUECA.GAME[channel].PLAYERS.push({nick: nick, hand: [], team: team});
+            Eventer.client.say(channel, nick + ' entra para a equipa ' + team);
+        } else {
+            Eventer.client.say(channel, nick + ' já estás em jogo, equipa ' + findPlayer(nick).team);
+        }
     }
 
-    if (message[1] === 'how') {
-        Eventer.client.say(channel, '.spl <naipe><numero> ex: .spl copas7');
+    if (!message[1]) {
+        Eventer.client.say(channel, 'Começar um novo jogo .sueca start');
+        Eventer.client.say(channel, 'jogar uma carta .spl <naipe><numero>; ex: .spl copas7');
     }
 }
 
@@ -310,4 +327,9 @@ SUECA.prototype.initialize = function (EventService) {
 
     Eventer.catchEvent('message#','.sueca', parseSuecaCommand);
     Eventer.catchEvent('message#','.spl', triggerPlayEvent);
+};
+
+SUECA.prototype.rehasher = function () {
+    Eventer.releaseEvent('message#','.sueca');
+    Eventer.releaseEvent('message#','.spl');
 };
