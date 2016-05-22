@@ -18,7 +18,8 @@ var SUECA = module.exports = function SUECA() {
             PLAYERS:[
                 {
                     nick: "r3dsmile",
-                    hand: []
+                    hand: [],
+                    team: 'A'
                 }
             ]
         }
@@ -76,7 +77,7 @@ function dealHand(gameChannel) {
     var randomCardPos;
     var cardPerHand = 10, i = 1;
 
-    SUECA.GAME[gameChannel].PLAYERS.forEach(function (object, index) {
+    _SUECA.GAME[gameChannel].PLAYERS.forEach(function (object, index) {
         for (i = 1; i <= cardPerHand; i++) {
             do {
                 randomCardPos = Math.floor(Math.random() * deck.length);
@@ -92,9 +93,9 @@ function startNewGame(nick) {
     var channelName;
     do {
         channelName = "sueca" + Math.floor(Math.random() * 10000);
-    } while(SUECA.GAME[channelName] !== undefined);
+    } while(_SUECA.GAME[channelName] !== undefined);
 
-    SUECA.GAME[channelName] = {
+    _SUECA.GAME[channelName] = {
         PLAYERS: [],
         whosTurn: '',
         pulledCard: {face: '', number: 0},
@@ -107,8 +108,8 @@ function startNewGame(nick) {
 
     Eventer.client.join(channelName);
     Eventer.catchEvent('join',channelName, function(channel, nick) {
-        if (nick !== Eventer.client.nick || SUECA.GAME[channelName].PLAYERS.length <= 4) {
-            Eventer.client.say(channelName, nick + ', está um jogo a começar. usa .sueca para entrares');
+        if (nick !== Eventer.client.nick || _SUECA.GAME[channelName].PLAYERS.length <= 4) {
+            Eventer.client.say(channelName, nick + ', está um jogo a começar. escreve ".sueca join"');
         }
     });
 
@@ -116,25 +117,27 @@ function startNewGame(nick) {
         var starter;
         Eventer.releaseEvent('join', channelName);
 
-        if (SUECA.GAME[channelName].PLAYERS.length < 4) {
+        if (_SUECA.GAME[channelName].PLAYERS.length < 4) {
             Eventer.client.say(channelName, 'O jogo parou por falta de jogadores');
             Eventer.client.part(channelName);
-            delete SUECA.GAME[channelName];
+            delete _SUECA.GAME[channelName];
         } else {
             starter = Math.floor(Math.random() * 4) + 1;
-            SUECA.GAME[channelName].whosTurn = starter;
+            _SUECA.GAME[channelName].whosTurn = starter;
 
             Eventer.client.say(channelName, '\'Tou a dar as cartas..');
             dealHand(channelName);
-            Eventer.client.say(channelName, SUECA.GAME[channelName].PLAYERS[starter] + ', começa :D');
+            Eventer.client.say(channelName, _SUECA.GAME[channelName].PLAYERS[starter] + ', começa :D');
         }
-    },25 * 1000);
+    },60 * 1000);
+
+    return (_SUECA.GAME[channelName]) ? channelName : false;
 }
 
 function endGame(channelName) {
     Eventer.releaseEvent('join', channelName);
     venter.client.part(channelName);
-    delete SUECA.GAME[channelName];
+    delete _SUECA.GAME[channelName];
 }
 
 function playerHasNoFaceCard(face, hand) {
@@ -159,10 +162,10 @@ function userHasCardInHand(card, hand) {
 }
 
 function canThisCardBePlayed(channel, card, hand) {
-    var topCard = SUECA.GAME[channel].pulledCard;
+    var topCard = _SUECA.GAME[channel].pulledCard;
     if (topCard.number !== 0) {
         return card.face === topCard.face ||
-            SUECA.GAME[channel].trumpFace === card.face && playerHasNoFaceCard(topCard.face, hand) ||
+            _SUECA.GAME[channel].trumpFace === card.face && playerHasNoFaceCard(topCard.face, hand) ||
             playerHasNoFaceCard(topCard.face, hand);
     } else {
         return true;
@@ -188,13 +191,13 @@ function announceRoundWinner(cardsInTable, channel) {
     });
 
     if (team.A > team.B) {
-        SUECA.GAME[channel].TEAMSCORE.A += team.A + team.B;
+        _SUECA.GAME[channel].TEAMSCORE.A += team.A + team.B;
     } else if (team.A < team.B) {
-        SUECA.GAME[channel].TEAMSCORE.B += team.B + team.A;
+        _SUECA.GAME[channel].TEAMSCORE.B += team.B + team.A;
     }
 }
 
-function playCard(channel, card, nick, nickIndex, playerTeam) {
+function playCard(channel, card, nick, nickIndex) {
     var nextInLine = nickIndex - 1;
 
     if (!userHasCardInHand(card, nick.hand)) {
@@ -208,23 +211,23 @@ function playCard(channel, card, nick, nickIndex, playerTeam) {
         return false;
     }
 
-    SUECA.GAME[channel].tabledCards.push({team: playerTeam, card: parseStringOfCards(card)[0]});
-    SUECA.GAME[channel].whosTurn = (nextInLine === -1) ? SUECA.GAME[channel].PLAYERS[3].nick : SUECA.GAME[channel].PLAYERS[nextInLine].nick;
-    SUECA.GAME[channel].playedCards += 1;
+    _SUECA.GAME[channel].tabledCards.push({team: nick.team, card: parseStringOfCards(card)[0]});
+    _SUECA.GAME[channel].whosTurn = (nextInLine === -1) ? _SUECA.GAME[channel].PLAYERS[3].nick : _SUECA.GAME[channel].PLAYERS[nextInLine].nick;
+    _SUECA.GAME[channel].playedCards += 1;
 
-    if (SUECA.GAME[channel].playedCards === 4) {
-        announceRoundWinner(SUECA.GAME[channel].tabledCards, channel);
-        SUECA.GAME[channel].tabledCards = [];
-        SUECA.GAME[channel].pulledCard = {face: '', number: 0};
-        SUECA.GAME[channel].totalPlayedCards += SUECA.GAME[channel].playedCards;
-        SUECA.GAME[channel].playedCards = 0;
+    if (_SUECA.GAME[channel].playedCards === 4) {
+        announceRoundWinner(_SUECA.GAME[channel].tabledCards, channel);
+        _SUECA.GAME[channel].tabledCards = [];
+        _SUECA.GAME[channel].pulledCard = {face: '', number: 0};
+        _SUECA.GAME[channel].totalPlayedCards += _SUECA.GAME[channel].playedCards;
+        _SUECA.GAME[channel].playedCards = 0;
     }
 
-    if (SUECA.GAME[channel].totalPlayedCards === 40) {
-        Eventer.client.say(channel, 'A ultima carta foi jogada. Ganhou a Equipa ' + (SUECA.GAME[channel].TEAMSCORE.A > SUECA.GAME[channel].TEAMSCORE.B) ? 'A' : 'B');
+    if (_SUECA.GAME[channel].totalPlayedCards === 40) {
+        Eventer.client.say(channel, 'A ultima carta foi jogada. Ganhou a Equipa ' + (_SUECA.GAME[channel].TEAMSCORE.A > _SUECA.GAME[channel].TEAMSCORE.B) ? 'A' : 'B');
         endGame(channel);
     } else {
-        Eventer.client.say(channel, nick.nick + ' jogou ' + card + '; ' + SUECA.GAME[channel].whosTurn + ', joga.');
+        Eventer.client.say(channel, nick.nick + ' jogou ' + card + '; ' + _SUECA.GAME[channel].whosTurn + ', joga.');
     }
 }
 
@@ -239,13 +242,13 @@ function triggerPlayEvent(nick, channel, message) {
     var card, nickIndex = false;
     message = message.split(' ');
 
-    if (!SUECA.GAME[channel]) {
+    if (!_SUECA.GAME[channel]) {
         return false;
     }
 
     card = isValidCard(message[1]);
 
-    SUECA.GAME[channel].PLAYERS.some(function(object, index){
+    _SUECA.GAME[channel].PLAYERS.some(function(object, index){
         if (object.nick.toLowerCase() === nick.toLowerCase()) {
             nick = object;
             nickIndex = index;
@@ -258,5 +261,53 @@ function triggerPlayEvent(nick, channel, message) {
         return false;
     }
 
-    playCard(channel,card, nick, nickIndex);
+    playCard(channel, card, nick, nickIndex);
 }
+
+function choosePlayerTeam(playerList) {
+    var team = {a: 0, b: 0};
+    playerList.forEach(function(player){
+        if (player.team === 'A') {
+            team.a += 1;
+        } else {
+            team.b += 1;
+        }
+    });
+    if (team.a > team.b) {
+        return 'B';
+    } else {
+        return 'A';
+    }
+}
+
+function parseSuecaCommand(nick, channel, message) {
+    message = message.split(' ');
+    var channelName, team;
+
+    if (message[1] === 'start') {
+        channelName = startNewGame(nick);
+        if (channelName) {
+            Eventer.client.say(channel, 'Foi criado o ' + channelName + ' - O joso irá começar dentro de 1m');
+        } else {
+            Eventer.client.say(channel, 'Não foi possivel criar o canal...');
+        }
+    }
+
+    if (message[1] === 'join' && _SUECA.GAME[channel]) {
+        team = choosePlayerTeam(_SUECA.GAME[channel].PLAYERS);
+        _SUECA.GAME[channel].PLAYERS.push({nick: nick, hand: [], team: team});
+        Eventer.client.say(channel, nick + ' entra para a equipa ' + team);
+    }
+
+    if (message[1] === 'how') {
+        Eventer.client.say(channel, '.spl <naipe><numero> ex: .spl copas7');
+    }
+}
+
+SUECA.prototype.initialize = function (EventService) {
+    Eventer = EventService;
+    _SUECA = this;
+
+    Eventer.catchEvent('message#','.sueca', parseSuecaCommand);
+    Eventer.catchEvent('message#','.spl', triggerPlayEvent);
+};
