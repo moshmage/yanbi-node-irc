@@ -37,7 +37,8 @@ var RPS = module.exports = function RPS() {
 function handlePoints(nick, mod) {
     if (!_RPS.Players[nick]) {
         _RPS.Players[nick] = {
-            points: 0
+            score: 0,
+            nick: nick
         }
     }
 
@@ -58,8 +59,14 @@ function findChosenSign(sign) {
 }
 
 function rpsLadderString() {
-    var string;
-    var ladder = _RPS.Players.sort(function (a, b) {
+    var string = '';
+    var ladder = [];
+
+    Object.keys(_RPS.Players).forEach(function(player){
+        ladder.push(_RPS.Players[player]);
+    });
+
+    ladder.sort(function (a, b) {
         if (a.score > b.score) {
             return 1;
         }
@@ -180,13 +187,13 @@ function playRockPaperScissorsBot(nick, target, message) {
     chosen = findChosenSign(message[1]);
     result = _RPS.logicalArray[machineChoice].indexOf(chosen);
 
-    if (!chosen) {
-        if (chosen === 'ladder') {
-            Eventer.client.say(target, rpsLadderString());
-        } else {
-            Eventer.client.say(target, '.rps <rock|paper|scissor>');
-        }
+    if (message[1] === 'ladder') {
+        Eventer.client.say(target, rpsLadderString());
+        return false;
+    }
 
+    if (!chosen) {
+        Eventer.client.say(target, '.rps <rock|paper|scissor>');
         return false;
     }
 
