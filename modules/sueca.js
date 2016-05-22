@@ -255,6 +255,7 @@ function playCard(channel, card, nick, nickIndex) {
         Eventer.client.say(channel, 'A ultima carta foi jogada. Ganhou a Equipa ' + (_SUECA.GAME[channel].TEAMSCORE.A > _SUECA.GAME[channel].TEAMSCORE.B) ? 'A' : 'B');
         endGame(channel);
     } else {
+        // todo: remove card from hand
         Eventer.client.say(channel, nick.nick + ' jogou ' + readableHandString([card]) + '; ' + _SUECA.GAME[channel].whosTurn + ', joga.');
     }
 }
