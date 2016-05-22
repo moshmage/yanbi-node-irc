@@ -3,6 +3,8 @@
  */
 
 var Eventer;
+var fs = require('fs');
+var Owner = require('./conf/init.conf.js').owner;
 var reRequire = require('re-require-module').reRequire;
 
 module.exports = function ModuleMan() {
@@ -60,7 +62,7 @@ module.exports = function ModuleMan() {
          */
         Eventer.catchEvent('notice',';rehash', function (nick, to, message) {
             message = message.split(' ');
-            if (nick.toLowerCase() !== ircConf.owner.toLowerCase()) {
+            if (nick.toLowerCase() !== Owner.toLowerCase()) {
                 return false;
             }
 

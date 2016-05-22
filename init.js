@@ -2,12 +2,11 @@
  * Created by Mosh Mage on 5/21/2016.
  */
 var irc = require('irc');
-var fs = require('fs');
 
 var ircConf = require('./conf/init.conf.js');
 var Eventer = new require('./eventer.js')(irc, ircConf);
-var Dispatcher = require('./dispatcher.js')();
 
+var Dispatcher = require('./dispatcher.js')();
 var ModuleMan = require('./module-manager')();
 
 Dispatcher.initialize(Eventer);
