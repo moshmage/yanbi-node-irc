@@ -2,9 +2,9 @@
  * Created by Mosh Mage on 5/21/2016.
  */
 var Eventer = null;
-var EXAMPLE = module.exports = function HELP() {
-    if (!(this instanceof HELP)) {
-        return new HELP();
+var EXAMPLE = module.exports = function EXAMPLE() {
+    if (!(this instanceof EXAMPLE)) {
+        return new EXAMPLE();
     }
 
     this.name = "Example";
@@ -21,7 +21,7 @@ function selfJoinedChannel(channel, nick) {
 
 EXAMPLE.prototype.initialize = function (EventService) {
     Eventer = EventService;
-    Eventer.catchEvent('join','mmBot',selfJoinedChannel);
+    Eventer.catchEvent('join','mmBot', selfJoinedChannel);
 };
 
 EXAMPLE.prototype.rehasher = function () {

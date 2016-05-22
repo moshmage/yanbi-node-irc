@@ -65,14 +65,8 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
 
     /**
      * Removes a child event from the list
-     * @param eventType {string}                        the Event Type you want to release;
-     *                                                  If the length of child listeners is 0
-     *                                                  it will remove this eventType from
-     *                                                  both the client and Eventer
-     * @param wordMatch {string|boolean|function}
-     *                                                  false if you want to remove the listener from
-     *                                                  function if you have a custom event hooked
-     *                                                  string if you want to remove a childEvent
+     * @param eventType {string}
+     * @param wordMatch {string}
      * @returns {boolean}
      */
     var releaseEvent = function (eventType, wordMatch) {
