@@ -7,6 +7,7 @@ var CONF = require('../conf/RPS.conf.js');
 
 var BACKUPS;
 var Eventer = null;
+var _RPS;
 
 var RPS = module.exports = function RPS() {
     if (!(this instanceof RPS)) {
@@ -27,27 +28,27 @@ var RPS = module.exports = function RPS() {
     this.logicalArray = {
         paper: ['rock','scissor'],
         rock: ['scissor', 'paper'],
-        scissor: ['paper', 'scissor']
+        scissor: ['paper', 'rock']
     };
 
     this.Players = {};
 };
 
 function handlePoints(nick, mod) {
-    if (!RPS.Players[nick]) {
-        RPS.Players[nick] = {
+    if (!_RPS.Players[nick]) {
+        _RPS.Players[nick] = {
             points: 0
         }
     }
 
-    RPS.Players[nick].score += mod;
+    _RPS.Players[nick].score += mod;
 }
 
 function findChosenSign(sign) {
     var chosen;
-    Object.keys(RPS.allowedSigns).some(function (key) {
+    Object.keys(_RPS.allowedSigns).some(function (key) {
         if (key.split('|').indexOf(sign) > -1) {
-            chosen = RPS.allowedSigns[key];
+            chosen = _RPS.allowedSigns[key];
             return true;
         }
     });
@@ -58,7 +59,7 @@ function findChosenSign(sign) {
 
 function rpsLadderString() {
     var string;
-    var ladder = RPS.Players.sort(function (a, b) {
+    var ladder = _RPS.Players.sort(function (a, b) {
         if (a.score > b.score) {
             return 1;
         }
@@ -82,19 +83,19 @@ function rpsLadderString() {
 }
 
 function releaseChallengeWith(nick) {
-    Object(RPS.Players).forEach(function (player) {
-        if (RPS.Players[player].challenge && RPS.Players[player].challenge.enemy === nick.toLowerCase()) {
-            Eventer.client.notice(nick, + 'Player is not online.');
-            delete RPS.Players[player].challenge;
+    Object.keys(_RPS.Players).forEach(function (player) {
+        if (_RPS.Players[player].challenge && _RPS.Players[player].challenge.enemy === nick.toLowerCase()) {
+            Eventer.client.notice(player, nick + ' Player is not online or didn\'t answer.');
+            delete _RPS.Players[player].challenge;
         }
     });
 }
 
 function findChallenger(challenged) {
     var found;
-    Object.keys(RPS.Players[challenged]).some(function(player) {
-        if (RPS.Players[player].challenge && RPS.Players[player].challenge.enemy === challenged.toLowerCase()) {
-            found = {player: player, chosen: RPS.Players[player].challenge.chosen};
+    Object.keys(_RPS.Players).some(function(player) {
+        if (_RPS.Players[player].challenge && _RPS.Players[player].challenge.enemy === challenged.toLowerCase()) {
+            found = {player: player, chosen: _RPS.Players[player].challenge.chosen};
             return true;
         }
     });
@@ -104,7 +105,7 @@ function findChallenger(challenged) {
 }
 
 function makeChallenge(nick, chosen, challengeNick) {
-    RPS.Players[nick].challenge = {
+    _RPS.Players[nick].challenge = {
         chosen: chosen,
         enemy: challengeNick.toLowerCase()
     };
@@ -126,7 +127,7 @@ function sayWinner(name, sign) {
 }
 
 function declareWinner(nick, challengeNick, chosen) {
-    var result = RPS.logicalArray[challengeNick.chosen].indexOf(chosen);
+    var result = _RPS.logicalArray[challengeNick.chosen].indexOf(chosen);
 
     if (result === 0) {
         handlePoints(nick, -1);
@@ -148,18 +149,23 @@ function playRockPaperScissors(nick, to, message) {
     var chosen, challengeNick = message[2];
     chosen = findChosenSign(message[1]);
 
-    if (!chosen) {
-        Eventer.client.say(nick, '!rps <rock|paper|scissor> [nick-of-a-player|reply]');
+    if (!chosen || !challengeNick) {
+        Eventer.client.notice(nick, '.rps <rock|paper|scissor> [nick-of-a-player|reply]');
         return false;
     }
 
-    if (!RPS.Players[nick]) {
+    if (!_RPS.Players[nick]) {
         handlePoints(nick,0);
     }
 
     if (challengeNick === 'reply') {
         challengeNick = findChallenger(nick);
+        if (!challengeNick) {
+            Eventer.client.notice(nick, 'You have no challenge');
+            return false;
+        }
         declareWinner(nick, challengeNick, chosen);
+        delete _RPS.Players[challengeNick.player].challenge;
     } else {
         makeChallenge(nick, chosen, challengeNick);
     }
@@ -169,23 +175,23 @@ function playRockPaperScissors(nick, to, message) {
 function playRockPaperScissorsBot(nick, target, message) {
     var chosen;
     var result;
-    var machineChoice = Object.keys(RPS.logicalArray)[Math.floor(Math.random() * 3) + 1];
+    var machineChoice = Object.keys(_RPS.logicalArray)[Math.floor(Math.random() * 3)];
     message = message.split(' ');
     chosen = findChosenSign(message[1]);
-    result = machineChoice.indexOf(chosen);
+    result = _RPS.logicalArray[machineChoice].indexOf(chosen);
 
     if (!chosen) {
         if (chosen === 'ladder') {
             Eventer.client.say(target, rpsLadderString());
         } else {
-            Eventer.client.say(target, '!rps <rock|paper|scissor>');
+            Eventer.client.say(target, '.rps <rock|paper|scissor>');
         }
 
         return false;
     }
 
     Eventer.client.say(target, '.rps ' + machineChoice);
-
+    console.log('result',result);
     if (result === 0) {
         Eventer.client.say(target, 'Hah! I win :)');
         handlePoints(nick, -1);
@@ -208,16 +214,18 @@ function catch401Raw(message) {
 
 RPS.prototype.initialize = function (EventService) {
     Eventer = EventService;
+    _RPS = this;
+
     Eventer.catchEvent('message#','.rps', playRockPaperScissorsBot);
     Eventer.catchEvent('notice','.rps', playRockPaperScissors);
-    Eventer.createEventType('error', catch401Raw);
+    // Eventer.createEventType('error', catch401Raw);
 
     if (fs.existsSync(CONF.writePath)) {
-        RPS.Players = JSON.parse(fs.readFileSync(CONF.writePath));
+        _RPS.Players = JSON.parse(fs.readFileSync(CONF.writePath));
     }
 
     BACKUPS = setInterval(function(){
-        fs.writeFile(CONF.writePath,JSON.stringify(RPS.Players),function(err){
+        fs.writeFile(CONF.writePath,JSON.stringify(_RPS.Players),function(err){
             if (err) {
                 console.log('Failed to write to', CONF.writePath, err);
             } else {
@@ -230,6 +238,7 @@ RPS.prototype.initialize = function (EventService) {
 RPS.prototype.rehasher = function () {
     Eventer.releaseEvent('join','mmBot');
     Eventer.releaseEvent('message#','.rps');
-    Eventer.releaseEvent('error', catch401Raw);
+    Eventer.releaseEvent('notice','.rps');
+    // Eventer.releaseEvent('error', catch401Raw);
     clearInterval(BACKUPS);
 };

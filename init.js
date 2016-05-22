@@ -25,13 +25,15 @@ function initializeModule(module, rehash) {
     if (!rehash) {
         tempModule = require('./modules/' + module)();
     } else {
-        tempModule = reRequire('./modules/' + module)();
+        if (!fs.existsSync(module)) module = './modules/' + module;
+        tempModule = reRequire(module)();
     }
 
     console.log((!rehash) ? 'Loaded' : 'Reloaded',
         tempModule.name,tempModule.version || '', tempModule.author || '');
 
     Modules[tempModule.name] = tempModule;
+    Modules[tempModule.name].path = !fs.existsSync(module) ? './modules/' + module : module;
 
     if (typeof tempModule.initialize === "function") {
         Modules[tempModule.name].initialize(Eventer);
@@ -96,6 +98,6 @@ Eventer.catchEvent('notice',';rehash', function (nick, to, message) {
     }
 
     Modules[message[1]].rehasher();
-    initializeModule(message[1] + '.js', true);
+    initializeModule(Modules[message[1]].path, true);
 
 });
