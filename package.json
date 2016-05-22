@@ -1,8 +1,8 @@
 {
-  "name": "node-slap-bot",
+  "name": "yanbi",
   "version": "1.0.0",
-  "description": "Slap bot irc game",
-  "main": "slapbot.js",
+  "description": "yet another node-irc bot implementation",
+  "main": "init.js",
   "author": "moshmage@gmail.com",
   "license": "ISC",
   "dependencies": {
