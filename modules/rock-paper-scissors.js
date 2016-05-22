@@ -2,10 +2,11 @@
  * Created by Mosh Mage on 5/21/2016.
  */
 
+var fs = require('fs');
+var CONF = require('../conf/RPS.conf.js');
+
+var BACKUPS;
 var Eventer = null;
-var CONF = {
-    RESULTSCHANNEL: '#mmdev'
-};
 
 var RPS = module.exports = function RPS() {
     if (!(this instanceof RPS)) {
@@ -15,7 +16,7 @@ var RPS = module.exports = function RPS() {
     this.name = "RPS";
     this.description = "Rock Paper Scissors game";
     this.author = "moshmage@gmail.com";
-    this.version = "1.0";
+    this.version = "1.2";
 
     this.allowedSigns = {
         'scissor|scissors|s|1': 'scissor',
@@ -210,10 +211,25 @@ RPS.prototype.initialize = function (EventService) {
     Eventer.catchEvent('message#','.rps', playRockPaperScissorsBot);
     Eventer.catchEvent('notice','.rps', playRockPaperScissors);
     Eventer.createEventType('error', catch401Raw);
+
+    if (fs.existsSync(CONF.writePath)) {
+        RPS.Players = JSON.parse(fs.readFileSync(CONF.writePath));
+    }
+
+    BACKUPS = setInterval(function(){
+        fs.writeFile(CONF.writePath,JSON.stringify(RPS.Players),function(err){
+            if (err) {
+                console.log('Failed to write to', CONF.writePath, err);
+            } else {
+                console.log('Wrote to', CONF.writePath);
+            }
+        });
+    }, 1800 * 1000);
 };
 
 RPS.prototype.rehasher = function () {
     Eventer.releaseEvent('join','mmBot');
     Eventer.releaseEvent('message#','.rps');
     Eventer.releaseEvent('error', catch401Raw);
+    clearInterval(BACKUPS);
 };
