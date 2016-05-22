@@ -3,6 +3,10 @@
  */
 
 var Eventer = null;
+var CONF = {
+    RESULTSCHANNEL: '#mmdev'
+};
+
 var RPS = module.exports = function RPS() {
     if (!(this instanceof RPS)) {
         return new RPS();
@@ -23,7 +27,7 @@ var RPS = module.exports = function RPS() {
         paper: ['rock','scissor'],
         rock: ['scissor', 'paper'],
         scissor: ['paper', 'scissor']
-    }
+    };
 
     this.Players = {};
 };
@@ -85,14 +89,20 @@ function releaseChallengeWith(nick) {
     });
 }
 
-function playRockPaperScissors(nick, to, message) {
-    message = message.split(' ');
-    var chosen, challengeNick = message[2];
-    chosen = findChosenSign(message[1]);
-    if (!RPS.Players[nick]) {
-        handlePoints(nick,0);
-    }
+function findChallenger(challenged) {
+    var found;
+    Object.keys(RPS.Players[challenged]).some(function(player) {
+        if (RPS.Players[player].challenge && RPS.Players[player].challenge.enemy === challenged.toLowerCase()) {
+            found = {player: player, chosen: RPS.Players[player].challenge.chosen};
+            return true;
+        }
+    });
 
+    if (found) return found;
+    return false;
+}
+
+function makeChallenge(nick, chosen, challengeNick) {
     RPS.Players[nick].challenge = {
         chosen: chosen,
         enemy: challengeNick.toLowerCase()
@@ -104,6 +114,54 @@ function playRockPaperScissors(nick, to, message) {
     setTimeout(function () {
         releaseChallengeWith(challengeNick);
     },25 * 1000);
+}
+
+function sayWinner(name, sign) {
+    if (!name && !sign) {
+        Eventer.client.say(CONF.RESULTSCHANNEL, "That's a tie!");
+    } else {
+        Eventer.client.say(CONF.RESULTSCHANNEL, name + ' won the match with ' + sign);
+    }
+}
+
+function declareWinner(nick, challengeNick, chosen) {
+    var result = RPS.logicalArray[challengeNick.chosen].indexOf(chosen);
+
+    if (result === 0) {
+        handlePoints(nick, -1);
+        handlePoints(challengeNick.player, 1);
+        sayWinner(challengeNick.player, challengeNick.chosen);
+    } else if (result === 1) {
+        handlePoints(nick, 1);
+        handlePoints(challengeNick.player, -1);
+        sayWinner(nick, chosen);
+    } else {
+        handlePoints(nick, 0);
+        handlePoints(challengeNick.player, 0);
+        sayWinner();
+    }
+}
+
+function playRockPaperScissors(nick, to, message) {
+    message = message.split(' ');
+    var chosen, challengeNick = message[2];
+    chosen = findChosenSign(message[1]);
+
+    if (!chosen) {
+        Eventer.client.say(nick, '!rps <rock|paper|scissor> [nick-of-a-player|reply]');
+        return false;
+    }
+
+    if (!RPS.Players[nick]) {
+        handlePoints(nick,0);
+    }
+
+    if (challengeNick === 'reply') {
+        challengeNick = findChallenger(nick);
+        declareWinner(nick, challengeNick, chosen);
+    } else {
+        makeChallenge(nick, chosen, challengeNick);
+    }
 
 }
 
@@ -127,7 +185,6 @@ function playRockPaperScissorsBot(nick, target, message) {
 
     Eventer.client.say(target, '.rps ' + machineChoice);
 
-
     if (result === 0) {
         Eventer.client.say(target, 'Hah! I win :)');
         handlePoints(nick, -1);
@@ -142,20 +199,21 @@ function playRockPaperScissorsBot(nick, target, message) {
 
 }
 
+function catch401Raw(message) {
+    if (message.rawCommand === '401') {
+        releaseChallengeWith(message.args[1]);
+    }
+}
+
 RPS.prototype.initialize = function (EventService) {
     Eventer = EventService;
     Eventer.catchEvent('message#','.rps', playRockPaperScissorsBot);
-    // Eventer.catchEvent('notice','.rps', playRockPaperScissors);
-
-    Eventer.createEventType('error', function (message) {
-        if (message.rawCommand === '401') {
-            releaseChallengeWith(message.args[1]);
-        }
-    });
-
-    Eventer.client.say('estejagonaoexiste','olá');
+    Eventer.catchEvent('notice','.rps', playRockPaperScissors);
+    Eventer.createEventType('error', catch401Raw);
 };
 
 RPS.prototype.rehasher = function () {
     Eventer.releaseEvent('join','mmBot');
+    Eventer.releaseEvent('message#','.rps');
+    Eventer.releaseEvent('error', catch401Raw);
 };
