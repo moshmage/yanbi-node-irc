@@ -12,7 +12,16 @@ var SUECA = module.exports = function SUECA() {
     this.description = "game of sueca";
     this.author = "moshmage@gmail.com";
     this.version = "0.1";
-
+    
+    this.DEFAULTS = {
+        maxPlayers: 4,
+        maxPlaysPerRound: 4,
+        gameStartTimeout: 60 * 1000,
+        maxGames: 5,
+        reportToChannel: '#mmDev',
+        owner: 'r3dsmile'
+    };
+    
     this.GAME = {};
 };
 
@@ -54,7 +63,7 @@ function translateFace(face) {
 function readableHandString(handArray) {
     var string = '';
     handArray.forEach(function (card, index) {
-        string += translateFace(card.face) + '' + card.number;
+        string += card.face + '' + card.number;
         if (index !== handArray.length - 1) {
             string += ', ';
         }
@@ -79,6 +88,20 @@ function dealHand(gameChannel) {
     });
 }
 
+function setTrumpFace() {
+    var faces = "♥,♦,♣,♠".split(',');
+    var rnd = Math.floor(Math.random() * (faces.length - 1));
+    return faces[rnd];
+}
+
+function endGame(channelName) {
+    Eventer.releaseEvent('join', channelName);
+    Eventer.releaseEvent('part', channelName);
+    Eventer.client.part(channelName);
+    Eventer.client.say(_SUECA.DEFAULTS.reportToChannel, 'Jogo no ' + channelName + ' acabou.');
+    delete _SUECA.GAME[channelName];
+}
+
 function startNewGame(nick) {
     var channelName;
     do {
@@ -99,44 +122,55 @@ function startNewGame(nick) {
     };
 
     Eventer.client.join(channelName);
-    Eventer.catchEvent('join',channelName, function(channel, nick) {
+    Eventer.catchEvent('join', channelName, function(channel, nick) {
         if (nick !== Eventer.client.nick || _SUECA.GAME[channelName].PLAYERS.length <= 4) {
             Eventer.client.say(channelName, nick + ', está um jogo a começar. escreve ".sueca join"');
         }
     });
+    
+    Eventer.catchEvent('part', channelName, function(channel, nick) {
+        if (_SUECA.GAME[channelName]) {
+            if (findPlayer(nick, channel) && nick !== Eventer.client.nick) {
+                if (Object.keys(Eventer.client.chans[channelName].users).length - 1 === 1) {
+                    endGame(channelName);
+                }
+            } else if (Eventer.client.nick === nick) {
+                endGame(channelName);
+            }
+        }
+    });
+    
 
     setTimeout(function startOrStop() {
         var starter;
         Eventer.releaseEvent('join', channelName);
-
-        if (_SUECA.GAME[channelName].PLAYERS.length < 4) {
+        
+        if (!_SUECA.GAME[channelName]) {
+            return false;
+        }
+        
+        if (_SUECA.GAME[channelName].PLAYERS.length < _SUECA.DEFAULTS.maxPlayers) {
             Eventer.client.say(channelName, 'O jogo parou por falta de jogadores');
             Eventer.client.part(channelName);
             delete _SUECA.GAME[channelName];
         } else {
-            starter = Math.floor(Math.random() * 3);
+            starter = Math.floor(Math.random() * (_SUECA.DEFAULTS.maxPlayers - 1));
             starter = _SUECA.GAME[channelName].PLAYERS[starter].nick;
             _SUECA.GAME[channelName].whosTurn = starter;
+            _SUECA.GAME[channelName].trumpFace = setTrumpFace();
 
             Eventer.client.say(channelName, '\'Tou a dar as cartas..');
             dealHand(channelName);
-            Eventer.client.say(channelName,  starter + ', começa :D');
+            Eventer.client.say(channelName,  starter + ', começa. O trunfo é ' + _SUECA.GAME[channelName].trumpFace);
         }
-    },60 * 1000);
+    }, _SUECA.DEFAULTS.gameStartTimeout);
 
     return (_SUECA.GAME[channelName]) ? channelName : false;
 }
 
-function endGame(channelName) {
-    Eventer.releaseEvent('join', channelName);
-    venter.client.part(channelName);
-    delete _SUECA.GAME[channelName];
-}
-
 function playerHasFaceCard(face, hand) {
     return hand.some(function (card) {
-        console.log(card.face,'vs',face.face);
-        return card.face === face.face;
+        return card.face === face.face || card.face === face;
     });
 }
 
@@ -200,14 +234,32 @@ function announceRoundWinner(cardsInTable, channel) {
         } else if (team.A < team.B) {
             _SUECA.GAME[channel].TEAMSCORE.B += team.B + team.A;
             Eventer.client.say(channel, 'Equipa B levou a ronda');
+        } else {
+            Eventer.client.say(channel, 'Nova ronda');
         }
     } else {
         _SUECA.GAME[channel].TEAMSCORE[_SUECA.GAME[channel].lastTrumpTeam] += team.B + team.A;
+        Eventer.client.say(channel, 'Equipa ' +_SUECA.GAME[channel].lastTrumpTeam + ' levou a ronda');
     }
 }
 
+function removeCardFromHand(card, hand) {
+    var i;
+    hand.forEach(function(cardInHand, index) {
+        if (cardInHand.face === card.face && cardInHand.number == card.number) {
+            i = index;
+        }
+    });
+    
+    if (i >= 0) {
+        hand.splice(i, 1);
+    }
+
+    return hand;
+}
+
 function playCard(channel, card, nick, nickIndex) {
-    var nextInLine = nickIndex - 1, team = false;
+    var nextInLine = nickIndex - 1, team = false, playersLength = _SUECA.GAME[channel].PLAYERS.length - 1;
 
     if (!userHasCardInHand(card, nick.hand)) {
         Eventer.client.notice(nick.nick, readableHandString(nick.hand));
@@ -216,6 +268,11 @@ function playCard(channel, card, nick, nickIndex) {
     }
 
     if (!canThisCardBePlayed(channel, card, nick.hand)) {
+        if (playerHasFaceCard(_SUECA.GAME[channel].pulledCard, nick.hand)) {
+            Eventer.client.notice(nick.nick, readableHandString(nick.hand));
+            Eventer.client.say(channel, 'Tens uma carta que podes jogar');
+            return false;
+        }
         Eventer.client.say(channel, 'Essa carta não pode ser jogada');
         return false;
     }
@@ -236,47 +293,52 @@ function playCard(channel, card, nick, nickIndex) {
     }
 
     _SUECA.GAME[channel].tabledCards.push({team: team || nick.team, card: card});
-    _SUECA.GAME[channel].whosTurn = (nextInLine === -1) ? _SUECA.GAME[channel].PLAYERS[3].nick : _SUECA.GAME[channel].PLAYERS[nextInLine].nick;
+    _SUECA.GAME[channel].whosTurn = (nextInLine === -1) ? _SUECA.GAME[channel].PLAYERS[playersLength].nick : _SUECA.GAME[channel].PLAYERS[nextInLine].nick;
     _SUECA.GAME[channel].playedCards += 1;
-
-
-    if (_SUECA.GAME[channel].playedCards === 4) {
-        announceRoundWinner(_SUECA.GAME[channel].tabledCards, channel);
-        _SUECA.GAME[channel].tabledCards = [];
-        _SUECA.GAME[channel].pulledCard = {face: '', number: 0};
-        _SUECA.GAME[channel].totalPlayedCards += _SUECA.GAME[channel].playedCards;
-        _SUECA.GAME[channel].playedCards = 0;
-        _SUECA.GAME[channel].lastTrumpPoint = 0;
-        _SUECA.GAME[channel].lastTrumpTeam = '';
-        _SUECA.GAME[channel].pulledCard = false;
-    }
-
+    _SUECA.GAME[channel].totalPlayedCards += _SUECA.GAME[channel].playedCards;
+    
     if (_SUECA.GAME[channel].totalPlayedCards === 40) {
         Eventer.client.say(channel, 'A ultima carta foi jogada. Ganhou a Equipa ' + (_SUECA.GAME[channel].TEAMSCORE.A > _SUECA.GAME[channel].TEAMSCORE.B) ? 'A' : 'B');
         endGame(channel);
+        return false;
     } else {
-        // todo: remove card from hand
+        _SUECA.GAME[channel].PLAYERS[nickIndex].hand = removeCardFromHand(card, nick.hand);
         Eventer.client.say(channel, nick.nick + ' jogou ' + readableHandString([card]) + '; ' + _SUECA.GAME[channel].whosTurn + ', joga.');
     }
+    
+    if (_SUECA.GAME[channel].playedCards === _SUECA.DEFAULTS.maxPlaysPerRound) {
+        announceRoundWinner(_SUECA.GAME[channel].tabledCards, channel);
+        _SUECA.GAME[channel].tabledCards = [];
+        _SUECA.GAME[channel].pulledCard = {face: '', number: 0};
+        
+        _SUECA.GAME[channel].playedCards = 0;
+        _SUECA.GAME[channel].lastTrumpPoint = 0;
+        _SUECA.GAME[channel].lastTrumpTeam = '';
+        _SUECA.GAME[channel].pulledCard = {number: 0};
+    }
+    
 }
 
 function isValidCard(card) {
-    card = card.match(/(^[Cc](opas?|OPAS?)|^[Oo](uros?|UROS?)|^[Pp](aus?|AUS?)|^[Ee](spadas?|SPADAS?)|^[COPEcope])(\d|[AKJQakjq])/g);
-    card = card[0].replace(/((opas?)|(uros?)|(aus?)|(spadas?)|(OPAS?)|(UROS?)|(AUS?)|(SPADAS?))/g,'').toUpperCase();
-    console.log('isValidCard:',parseStringOfCards(card));
+    card = card.match(/(^[Cc](opas?|OPAS?)|^[Oo](uros?|UROS?)|^[Pp](aus?|AUS?)|^[Ee](spadas?|SPADAS?)|^[COPEcope])\s?([2-7]|[AKJQakjq])/g);
+    
+    if (!card) {
+        return false;
+    }
+    
+    card = card[0].replace(/((opas?)|(uros?)|(aus?)|(spadas?)|(OPAS?)|(UROS?)|(AUS?)|(SPADAS?))\s?/g,'').toUpperCase();
     card = parseStringOfCards(card) || false;
     return card;
-}
-
-function triggerParseCards(nick, channel, message) {
-    message = message.split(' ');
-    isValidCard(message[1]);
 }
 
 function triggerPlayEvent(nick, channel, message) {
     var card, nickIndex = false;
     message = message.split(' ');
-
+    
+    if (message[2]) {
+        message[1] += message[2];
+    }
+    
     if (!_SUECA.GAME[channel]) {
         return false;
     }
@@ -336,7 +398,7 @@ function findPlayer(nick, channel) {
     var found;
     _SUECA.GAME[channel].PLAYERS.some(function (player) {
         if (player.nick === nick) {
-            found = player.nick;
+            found = player;
             return true;
         }
     });
@@ -349,9 +411,15 @@ function parseSuecaCommand(nick, channel, message) {
     var channelName, team;
 
     if (message[1] === 'start') {
+        
+        if (Object.keys(_SUECA.GAME).length === _SUECA.DEFAULTS.maxGames) {
+            Eventer.client.say(channel, 'Máximo de jogos atingido, espera um bocado..');
+            return false;
+        }
+        
         channelName = startNewGame(nick);
         if (channelName) {
-            Eventer.client.say(channel, 'Foi criado o ' + channelName + ' - O jogo irá começar dentro de 1m');
+            Eventer.client.say(channel, 'Foi criado o ' + channelName + ' - O jogo irá começar dentro de ' + _SUECA.DEFAULTS.gameStartTimeout / 1000 + 's');
         } else {
             Eventer.client.say(channel, 'Não foi possivel criar o canal...');
         }
@@ -360,7 +428,7 @@ function parseSuecaCommand(nick, channel, message) {
 
     if (message[1] === 'join' && _SUECA.GAME[channel]) {
         if (!findPlayer(nick, channel)) {
-            if (_SUECA.GAME[channel].PLAYERS.length === 4) {
+            if (_SUECA.GAME[channel].PLAYERS.length === _SUECA.DEFAULTS.maxPlayers) {
                 Eventer.client.say(channel, nick + ' começa outro jogo, este esta cheio.');
                 return false;
             }
@@ -369,14 +437,50 @@ function parseSuecaCommand(nick, channel, message) {
             _SUECA.GAME[channel].PLAYERS.push({nick: nick, hand: [], team: team});
             Eventer.client.say(channel, nick + ' entra para a equipa ' + team);
         } else {
-            Eventer.client.say(channel, nick + ' já estás em jogo, equipa ' + findPlayer(nick).team);
+            Eventer.client.say(channel, nick + ' já estás em jogo, equipa ' + findPlayer(nick, channel).team);
             return false;
         }
     }
-
+    
+    if (message[1] === 'cartas' && _SUECA.GAME[channel]) {
+        nick = findPlayer(nick, channel);
+        if (nick.hand.length) {
+            Eventer.client.notice(nick.nick, readableHandString(nick.hand));
+        } else {
+            Eventer.client.notice(nick.nick, 'Ainda nao tens cartas..');
+        }
+        
+        return false;
+    }
+    
+    if (message[1] === 'naipe' && _SUECA.GAME[channel]) {
+        Eventer.client.say(channel, 'Naipe em jogo: ' + _SUECA.GAME[channel].pulledCard && _SUECA.GAME[channel].pulledCard.face || 'Nenhum naipe em jogo');
+        return false;
+    }
+    
+    if (message[1] === 'trunfo' && _SUECA.GAME[channel]) {
+        Eventer.client.say(channel, 'Trunfo na mesa: ' + _SUECA.GAME[channel].trumpFace.face || _SUECA.GAME[channel].trumpFace);
+        return false;
+    }
+    
+    if (message[1] === 'quem' && _SUECA.GAME[channel]) {
+        Eventer.client.say(channel, 'É a vez de ' + _SUECA.GAME[channel].whosTurn + ' jogar');
+        return false;
+    }
+    
+    if (message[1] === 'share' && !_SUECA.GAME[channel]) {
+        if (nick.toLowerCase() === _SUECA.DEFAULTS.owner.toLowerCase()) {
+            message[2] = (message[2].indexOf('#') > -1) ? message[2] : "#" + message[2];
+            Eventer.client.join(message[2]);
+            Eventer.client.say(message[2], 'A .sueca chegou :D');
+        }
+        
+        return false;
+    }
+    
     if (!message[1]) {
-        Eventer.client.say(channel, 'Começar um novo jogo .sueca start');
-        Eventer.client.say(channel, 'jogar uma carta .spl <naipe><numero>; ex: .spl copas7');
+        Eventer.client.say(channel, '.sueca <start|join|cartas|naipe|trunfo|quem>');
+        Eventer.client.say(channel, 'jogar uma carta: .spl <naipe> <numero>');
     }
 }
 
@@ -386,14 +490,13 @@ SUECA.prototype.initialize = function (EventService) {
 
     Eventer.catchEvent('message#','.sueca', parseSuecaCommand);
     Eventer.catchEvent('message#','.spl', triggerPlayEvent);
-    Eventer.catchEvent('message#','.dspl', triggerParseCards);
 };
 
 SUECA.prototype.rehasher = function () {
     Eventer.releaseEvent('message#','.sueca');
     Eventer.releaseEvent('message#','.spl');
-    Eventer.releaseEvent('message#','.dspl');
-
+    Eventer.client.say('#mmdev', 'Reload da sueca. A sair dos canais..');
+    
     Object.keys(_SUECA.GAME).forEach(function (channel) {
         Eventer.client.part(channel);
     });
