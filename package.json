@@ -1,8 +1,8 @@
 {
   "name": "yanbi",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "yet another node-irc bot implementation",
-  "main": "init.js",
+  "main": "yanbi.js",
   "author": "moshmage@gmail.com",
   "license": "ISC",
   "dependencies": {

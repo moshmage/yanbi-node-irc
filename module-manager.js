@@ -4,10 +4,9 @@
 
 var Eventer;
 var fs = require('fs');
-var Owner = require('./conf/init.conf.js').owner;
 var reRequire = require('re-require-module').reRequire;
 
-module.exports = function ModuleMan() {
+module.exports = function ModuleMan(Owner) {
     var modulesFolderContent;
     var List = {};
 
