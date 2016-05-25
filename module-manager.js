@@ -39,7 +39,7 @@ module.exports = function ModuleMan() {
         }
     }
     
-    function loadModulesFolder (rehash) {
+    function loadModulesFolder (rehash, nick) {
         modulesFolderContent = fs.readdirSync('modules/');
         modulesFolderContent.forEach(function (module) {
             if (module.indexOf('_') === 0) {
@@ -50,6 +50,10 @@ module.exports = function ModuleMan() {
 
             initializeModule(module, rehash);
         });
+
+        if (nick) {
+            Eventer.client.notice(nick, 'Folder reloaded :D');
+        }
     }
 
     function initialize(EventService) {
@@ -72,13 +76,13 @@ module.exports = function ModuleMan() {
 
             // todo: make it so we can unload every module
             if (message.length  === 1) {
-                loadModulesFolder(true);
-                Eventer.client.say(nick, 'You have to specify the module');
+                loadModulesFolder(true, nick);
+                Eventer.client.notice(nick, 'Reloading folder..');
                 return false;
             }
 
             if (typeof List[message[1]].rehasher !== "function") {
-                Eventer.client.say(nick, 'Module does not have a rehashing function..');
+                Eventer.client.notice(nick, 'Module does not have a rehashing function..');
                 return false;
             }
 
