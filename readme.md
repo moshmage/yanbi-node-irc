@@ -1,7 +1,7 @@
 # YANBI
 ### Yet Another Node-IRC Bot Implementation
 ---
-YANBI aims to be a base to make your bot reacto to whatever it likes. To do so it provides a simple interface for node-irc, complete with reloading of modules (thanks to re-require) so you don't have to kill your bot on every change.
+YANBI aims to be a base to make your bot reacto to whatever it likes. To do so it provides a simple interface for node-irc, complete with reloading of modules (thanks to re-require) so you don't have to kill your bot on every change.    
 tl;dr [yanbi-example](https://github.com/moshmage/yanbi-example)
 
 
