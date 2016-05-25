@@ -2,9 +2,13 @@
 ### Yet Another Node-IRC Bot Implementation
 ---
 YANBI aims to be a base to make your bot reacto to whatever it likes. To do so it provides a simple interface for node-irc, complete with reloading of modules (thanks to re-require) so you don't have to kill your bot on every change.
+tl;dr [yanbi-example](https://github.com/moshmage/yanbi-example)
+
 
 #### Basic Configuration
-`conf/init.conf.js` holds the basic configuration (server, nickname, nickserv password and channel to auto-join). If you need a more complete irc configuration, `eventer.js` is the file responsible to connect to the IRC.
+The bot comes with a simple configuration to feel node-irc needs, a nickname, a network, a channel, and a owner this can be found in `conf/init.conf.js`;
+If you don't provide an object with `server`, `selfNickname`, `channelsArray`, adn `yanbiModules` the bot will use the default configuration and join #mmDev @ snoonet.
+Remember this is built on node-irc, so anything that node-irc can handle as a config this should also be able to; Just don't forget those four important properties.
 
 Don't forget to assign a `owner` property (this is a __very basic__ security property) on the `init.conf.js` file so you can `/notice botName ;rehash` later and reload your modules.
 

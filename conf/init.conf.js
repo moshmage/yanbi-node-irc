@@ -6,5 +6,5 @@ module.exports = {
     selfNickname: 'suecada',
     nickserv: false,
     owner: 'r3dsmile',
-    yanbiModules: './modules/'
+    yanbiModules: __dirname + '/../modules/'
 };
