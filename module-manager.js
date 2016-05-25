@@ -6,7 +6,7 @@ var Eventer;
 var fs = require('fs');
 var reRequire = require('re-require-module').reRequire;
 
-module.exports = function ModuleMan(Owner) {
+module.exports = function ModuleMan(Owner, modulesFolder) {
     var modulesFolderContent;
     var List = {};
 
@@ -21,9 +21,9 @@ module.exports = function ModuleMan(Owner) {
     function initializeModule(module, rehash) {
         var tempModule;
         if (!rehash) {
-            tempModule = require('./modules/' + module)();
+            tempModule = require(modulesFolder + module)();
         } else {
-            if (!fs.existsSync(module)) module = './modules/' + module;
+            if (!fs.existsSync(module)) module = modulesFolder + module;
             tempModule = reRequire(module)();
         }
 
@@ -31,7 +31,7 @@ module.exports = function ModuleMan(Owner) {
             tempModule.name,tempModule.version || '', tempModule.author || '');
 
         List[tempModule.name] = tempModule;
-        List[tempModule.name].path = !fs.existsSync(module) ? './modules/' + module : module;
+        List[tempModule.name].path = !fs.existsSync(module) ? modulesFolder + module : module;
 
         if (typeof tempModule.initialize === "function") {
             List[tempModule.name].initialize(Eventer);
@@ -39,7 +39,7 @@ module.exports = function ModuleMan(Owner) {
     }
     
     function loadModulesFolder (rehash, nick) {
-        modulesFolderContent = fs.readdirSync('modules/');
+        modulesFolderContent = fs.readdirSync(modulesFolder);
         modulesFolderContent.forEach(function (module) {
             if (module.indexOf('_') === 0) {
                 console.log('Ignored',module,'because of trailing underscore');

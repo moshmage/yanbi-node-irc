@@ -4,7 +4,7 @@
 var irc = require('irc');
 
 function checkConfig(config) {
-    if (config.server && config.channelsArray && config.selfNickname) {
+    if (config && config.server && config.channelsArray && config.selfNickname && config.yanbiModules) {
         return config;
     }
 
@@ -16,7 +16,7 @@ var YANBI = function(ircConf) {
     var Eventer = new require('./eventer.js')(irc, ircConf);
 
     var Dispatcher = require('./dispatcher.js')();
-    var ModuleMan = require('./module-manager')(ircConf.owner);
+    var ModuleMan = require('./module-manager')(ircConf.owner, ircConf.yanbiModules);
 
     Dispatcher.initialize(Eventer);
     ModuleMan.initialize(Eventer);
