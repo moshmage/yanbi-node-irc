@@ -118,10 +118,6 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
             self.EVENTSNET[eventType].splice(found,1);
         }
 
-        if (self.FORCEKEEP.indexOf(eventType) < 0 && self.EVENTSNET[eventType].length === 0) {
-            destroyEventType(eventType);
-        }
-
     };
 
     /**
