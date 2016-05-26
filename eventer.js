@@ -74,17 +74,18 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
      * Removes a child event from the list
      * @param eventType {string}
      * @param wordMatch {string}
+     * @param removeAll {boolean}   delete eventsNet and removeListener
      * @returns {boolean}
      */
-    var releaseEvent = function (eventType, wordMatch) {
+    var releaseEvent = function (eventType, wordMatch, removeAll) {
         var found;
         if (!self.EVENTS[eventType]) {
             console.log('No such event type');
             return false;
         }
 
-        if (self.EVENTSNET[eventType].length === 0) {
-            console.log('Trying to remove a listener',eventType);
+        if (self.EVENTSNET[eventType].length === 0 || removeAll) {
+            delete self.EVENTSNET[eventType];
             client.removeListener(eventType, self.EVENTS[eventType]);
             delete self.EVENTS[eventType];
             return true;
