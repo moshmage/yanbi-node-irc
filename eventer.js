@@ -84,13 +84,6 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
             return false;
         }
 
-        if (self.EVENTSNET[eventType].length === 0 || removeAll) {
-            delete self.EVENTSNET[eventType];
-            client.removeListener(eventType, self.EVENTS[eventType]);
-            delete self.EVENTS[eventType];
-            return true;
-        }
-
         self.EVENTSNET[eventType].some(function(object, index){
             if (object.wordMatch === wordMatch) {
                 found = index;
@@ -100,6 +93,13 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
 
         if (found >= 0) {
             self.EVENTSNET[eventType].splice(found,1);
+            return true;
+        }
+
+        if (self.EVENTSNET[eventType].length === 0 || removeAll) {
+            delete self.EVENTSNET[eventType];
+            client.removeListener(eventType, self.EVENTS[eventType]);
+            delete self.EVENTS[eventType];
             return true;
         }
 
