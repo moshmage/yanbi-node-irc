@@ -44,7 +44,7 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
         } else {
             client.once(eventType, callback);
         }
-        
+
         return true;
     };
 
@@ -74,27 +74,29 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
      * Removes a child event from the list
      * @param eventType {string}
      * @param wordMatch {string}
+     * @param removeAll {boolean}   true = removes all child events that match
      * @returns {boolean}
      */
-    var releaseEvent = function (eventType, wordMatch) {
-        var found;
+    var releaseEvent = function (eventType, wordMatch, removeAll) {
+        var found, childMatchWord;
         if (!self.EVENTS[eventType]) {
             return false;
         }
 
+        self.EVENTSNET[eventType].some(function(object, index){
+            childMatchWord = object.wordMatch && object.wordMatch.word || object.wordMatch;
+            if (childMatchWord === wordMatch) {
+                found = index;
+                if (!removeAll) return true;
+            }
+        });
+
         if (self.EVENTSNET[eventType].length === 0) {
-            console.log('Trying to remove a listener',eventType);
             client.removeListener(eventType, self.EVENTS[eventType]);
             delete self.EVENTS[eventType];
             return true;
         }
 
-        self.EVENTSNET[eventType].some(function(object, index){
-            if (object.wordMatch === wordMatch) {
-                found = index;
-                return true;
-            }
-        });
 
         if (found >= 0) {
             self.EVENTSNET[eventType].splice(found,1);
