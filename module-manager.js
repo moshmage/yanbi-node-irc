@@ -66,10 +66,6 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
      * @param callback {function}   callback if you need, it callsback with 'name' as its argument
      */
     function unloadModule(name, callback) {
-        if (!List[name]) {
-            console.log('Unexisting module',name);
-            return;
-        }
 
         if (typeof List[name].rehasher() === "function") {
             List[name].rehasher();
@@ -80,8 +76,9 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
 
         if (callback && typeof callback === "function") {
             callback(name);
+            return;
         }
-
+        return true;
     }
     
     function initialize(EventService) {
@@ -92,7 +89,7 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
          *     makes it so we can reload the module without having to
          *     kill the bot each time.
          */
-        Eventer.catchEvent('notice',';rehash', function (nick, to, message) {
+        Eventer.catchEvent('notice','.rehash', function (nick, to, message) {
             message = message.split(' ');
             if (nick.toLowerCase() !== Owner.toLowerCase()) {
                 return;
@@ -118,6 +115,21 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
             initializeModule(List[message[1]].path, true);
             Eventer.client.notice(nick, 'Reloaded ' + List[message[1]].name + ' v' + List[message[1]].version);
         });
+        Eventer.catchEvent('notice', '.unload', function (nick, to, message) {
+            message = message.split(' ');
+            if (!message[1]) {
+                Eventer.client.notice(nick, 'Need a module to unload');
+                return;
+            }
+
+            if (!List[message[1]]) {
+                Eventer.client.notice(nick, 'Unexisting module: ' + message[1]);
+                return;
+            }
+
+            unloadModule(message[1]);
+            Eventer.client.notice(nick, 'Unloaded: ' + message[1] + ' :)');
+        })
 
     }
     
