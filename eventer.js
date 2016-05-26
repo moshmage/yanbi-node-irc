@@ -100,7 +100,6 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
 
         if (found >= 0) {
             self.EVENTSNET[eventType].splice(found,1);
-            console.log('Found',self.EVENTSNET[eventType][found]);
             return true;
         }
 

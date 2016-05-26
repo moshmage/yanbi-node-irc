@@ -85,7 +85,6 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
     function rehashAll() {
         Object.keys(List).forEach(function(module) {
             if (typeof List[module].rehasher() === "function") {
-                console.log('Calling rehasher for ' + module);
                 List[module].rehasher();
             }
         });
