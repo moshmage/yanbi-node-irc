@@ -37,7 +37,12 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
             List[tempModule.name].initialize(Eventer);
         }
     }
-    
+
+    /**
+     * Loads the modules folder as yanbi modules and acalls @initializeModule
+     * @param rehash {boolean}        if you're calling it from ;rehash, this should be true so you don't get copies
+     * @param nick {string}           if you're calling from ;rehash, this will be used to /notice nick reloaded report
+     */
     function loadModulesFolder (rehash, nick) {
         modulesFolderContent = fs.readdirSync(modulesFolder);
         modulesFolderContent.forEach(function (module) {
@@ -55,6 +60,30 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
         }
     }
 
+    /**
+     * Unloads a module both from the require() and YANBI, calling the .rehasher() if it exists as a function
+     * @param name      {string}    Module name
+     * @param callback {function}   callback if you need, it callsback with 'name' as its argument
+     */
+    function unloadModule(name, callback) {
+        if (!List[name]) {
+            console.log('Unexisting module',name);
+            return;
+        }
+
+        if (typeof List[name].rehasher() === "function") {
+            List[name].rehasher();
+        }
+
+        delete require.cache[List[name].path];
+        delete List[name];
+
+        if (callback && typeof callback === "function") {
+            callback(name);
+        }
+
+    }
+    
     function initialize(EventService) {
         Eventer = EventService;
 
