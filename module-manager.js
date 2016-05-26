@@ -148,6 +148,7 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
         List: List,
         initialize: initialize,
         loadModulesFolder: loadModulesFolder,
-        initializeModule: initializeModule
+        initializeModule: initializeModule,
+        unloadModule: unloadModule
     }
 };

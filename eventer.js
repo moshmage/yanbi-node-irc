@@ -29,6 +29,7 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
      *
      * @param eventType {string}    the event you want to catch
      * @param callback {function}   a callback function to be invoked
+     * @param once {boolead}        should this event be called only once? (calls event.once instead of addListener)
      * @returns {boolean}           false if eventType already exists
      */
     var createEventType = function (eventType, callback, once) {
@@ -75,13 +76,12 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
      * @param eventType {string}
      * @param wordMatch {string}
      * @param removeAll {boolean}   delete eventsNet and removeListener
-     * @returns {boolean}
      */
     var releaseEvent = function (eventType, wordMatch, removeAll) {
         var found;
         if (!self.EVENTS[eventType]) {
             console.log('No such event type');
-            return false;
+            return;
         }
 
         self.EVENTSNET[eventType].some(function(object, index){
@@ -93,17 +93,14 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
 
         if (found >= 0) {
             self.EVENTSNET[eventType].splice(found,1);
-            return true;
         }
 
         if (self.EVENTSNET[eventType].length === 0 || removeAll) {
             delete self.EVENTSNET[eventType];
             client.removeListener(eventType, self.EVENTS[eventType]);
             delete self.EVENTS[eventType];
-            return true;
         }
 
-        return false;
     };
 
     return {
