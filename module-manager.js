@@ -52,8 +52,8 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
             }
             if (!List[module]) {
                 rehash = false;
-            } else if (typeof List[name].rehasher() === "function") {
-                List[name].rehasher();
+            } else if (typeof List[module].rehasher() === "function") {
+                List[module].rehasher();
             }
             initializeModule(module, rehash);
         });
