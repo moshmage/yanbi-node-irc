@@ -78,14 +78,13 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
      * @returns {boolean}
      */
     var releaseEvent = function (eventType, wordMatch, removeAll) {
-        var found, childMatchWord;
+        var found, t;
         if (!self.EVENTS[eventType]) {
             return false;
         }
 
-        self.EVENTSNET[eventType].some(function(object, index){
-            childMatchWord = object.wordMatch && object.wordMatch.word || object.wordMatch;
-            if (childMatchWord === wordMatch) {
+        self.EVENTSNET[eventType].some(function(object, index) {
+            if (object.wordMatch === wordMatch) {
                 found = index;
                 if (!removeAll) return true;
             }
