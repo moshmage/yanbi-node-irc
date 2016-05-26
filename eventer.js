@@ -75,12 +75,12 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
             return false;
         }
 
-        // todo: figure out how to properly remove the event from require('events')
-        // if (self.EVENTSNET[eventType].length === 0) {
-        //     client.removeListener(eventType, wordMatch || self.EVENTS[eventType]());
-        //     delete self.EVENTS[eventType];
-        //     return true;
-        // }
+        if (self.EVENTSNET[eventType].length === 0) {
+            console.log('Trying to remove a listener',eventType);
+            client.removeListener(eventType, self.EVENTS[eventType]);
+            delete self.EVENTS[eventType];
+            return true;
+        }
 
         self.EVENTSNET[eventType].some(function(object, index){
             if (object.wordMatch === wordMatch) {
