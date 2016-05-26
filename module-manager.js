@@ -21,7 +21,7 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
     function initializeModule(module, rehash) {
         var tempModule;
         if (!rehash) {
-            tempModule = reRequire(modulesFolder + module)();
+            tempModule = require(modulesFolder + module)();
         } else {
             if (!fs.existsSync(module)) module = modulesFolder + module;
             tempModule = reRequire(module)();

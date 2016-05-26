@@ -12,6 +12,7 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
     var self = {
         EVENTS : {},
         EVENTSNET : {},
+        FORCEKEEP: [],
         conf : {}
     };
 
@@ -29,7 +30,7 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
      *
      * @param eventType {string}    the event you want to catch
      * @param callback {function}   a callback function to be invoked
-     * @param once {boolead}        should this event be called only once? (calls event.once instead of addListener)
+     * @param once {boolean}        should this event be called only once? (calls event.once instead of addListener)
      * @returns {boolean}           false if eventType already exists
      */
     var createEventType = function (eventType, callback, once) {
@@ -72,6 +73,23 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
     };
 
     /**
+     * Destroys a Parent Event Type and its childs
+     * @param eventType
+     * @param callback
+     */
+    function destroyEventType(eventType, callback) {
+        if (self.EVENTS[eventType]) {
+            delete self.EVENTSNET[eventType];
+            client.removeListener(eventType, self.EVENTS[eventType]);
+            delete self.EVENTS[eventType];
+        }
+
+        if (callback) {
+            callback(eventType);
+        }
+    }
+
+    /**
      * Removes a child event from the list
      * @param eventType {string}
      * @param wordMatch {string}
@@ -95,20 +113,33 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
             self.EVENTSNET[eventType].splice(found,1);
         }
 
-        if (self.EVENTSNET[eventType].length === 0 || removeAll) {
-            delete self.EVENTSNET[eventType];
-            client.removeListener(eventType, self.EVENTS[eventType]);
-            delete self.EVENTS[eventType];
+        if (self.FORCEKEEP.indexOf(eventType) < 0 && self.EVENTSNET[eventType].length === 0 || removeAll) {
+            destroyEventType(eventType);
         }
 
     };
 
+    /**
+     * Pushes events to a force-keep array, these WONT be deleted *EVEN IF* removeAll is used
+     * @param array {array}     Array of eventTpes
+     */
+    function forceKeep(array) {
+        array.forEach(function(key){
+            if (self.EVENTS[key]) {
+                self.FORCEKEEP.push(key);
+            }
+        });
+    }
+
     return {
         HOOKS: self,
         client: client,
+        forceKeep: forceKeep,
         releaseEvent: releaseEvent,
         catchEvent: catchEvent,
-        createEventType: createEventType
+        createEventType: createEventType,
+        destroyEventType: destroyEventType
+
     }
 };
 

@@ -70,10 +70,12 @@ function handlePartEvent(channel, nick) {
 Dispatcher.prototype.initialize = function (EventService) {
     Eventer = EventService;
 
-    Eventer.createEventType('join', handleJoinEvent);
-    Eventer.createEventType('part', handlePartEvent);
-    Eventer.createEventType('names', handleNamesEvent);
-    Eventer.createEventType('notice', handleNoticeEvent);
-    Eventer.createEventType('message#', handleMessageToChannelEvent);
+    Eventer.createEventType('join', handleJoinEvent, false);
+    Eventer.createEventType('part', handlePartEvent, false);
+    Eventer.createEventType('names', handleNamesEvent, false);
+    Eventer.createEventType('notice', handleNoticeEvent, false);
+    Eventer.createEventType('message#', handleMessageToChannelEvent, false);
+    
+    Eventer.forceKeep(['join','part','names','notice','message#']);
 
 };

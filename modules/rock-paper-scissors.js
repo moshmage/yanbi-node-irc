@@ -243,9 +243,9 @@ RPS.prototype.initialize = function (EventService) {
 };
 
 RPS.prototype.rehasher = function () {
-    Eventer.releaseEvent('join','mmBot');
-    Eventer.releaseEvent('message#','.rps');
-    Eventer.releaseEvent('notice','.rps');
+    Eventer.releaseEvent('join','mmBot', false);
+    Eventer.releaseEvent('message#','.rps', false);
+    Eventer.releaseEvent('notice','.rps', false);
     // Eventer.releaseEvent('error', catch401Raw);
     clearInterval(BACKUPS);
 };
