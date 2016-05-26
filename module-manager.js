@@ -66,23 +66,23 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
         Eventer.catchEvent('notice',';rehash', function (nick, to, message) {
             message = message.split(' ');
             if (nick.toLowerCase() !== Owner.toLowerCase()) {
-                return false;
-            }
-
-            if (!List[message[1]]) {
-                return false;
+                return;
             }
 
             // todo: make it so we can unload every module
             if (message.length  === 1) {
                 loadModulesFolder(true, nick);
                 Eventer.client.notice(nick, 'Reloading folder..');
-                return false;
+                return;
+            }
+
+            if (!List[message[1]]) {
+                return;
             }
 
             if (typeof List[message[1]].rehasher !== "function") {
                 Eventer.client.notice(nick, 'Module does not have a rehashing function..');
-                return false;
+                return;
             }
 
             List[message[1]].rehasher();
