@@ -29,15 +29,22 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
      *
      * @param eventType {string}    the event you want to catch
      * @param callback {function}   a callback function to be invoked
-     * @returns {boolean}           false if eventType already exists
+     * @param once     {boolean}    if true, `once` is used instead of `addListener` and no eventType (or NET) is created
+     *
+     * @returns {boolean}           true if successful
      */
-    var createEventType = function (eventType, callback) {
-        if (typeof self.EVENTS[eventType] === "function") {
+    var createEventType = function (eventType, callback, once) {
+        if (typeof self.EVENTS[eventType] === "function" && !once) {
             return false;
         }
-        self.EVENTS[eventType] = callback;
-        self.EVENTSNET[eventType] = [];
-        client.addListener(eventType, self.EVENTS[eventType]);
+        if (!once) {
+            self.EVENTS[eventType] = callback;
+            self.EVENTSNET[eventType] = [];
+            client.addListener(eventType, self.EVENTS[eventType]);
+        } else {
+            client.once(eventType, callback);
+        }
+        
         return true;
     };
 
