@@ -102,6 +102,11 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
             return;
         }
 
+        if (removeAll) {
+            self.EVENTSNET[eventType] = [];
+            return;
+        }
+
         self.EVENTSNET[eventType].some(function(object, index){
             if (object.wordMatch === wordMatch) {
                 found = index;
@@ -113,7 +118,7 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
             self.EVENTSNET[eventType].splice(found,1);
         }
 
-        if (self.FORCEKEEP.indexOf(eventType) < 0 && self.EVENTSNET[eventType].length === 0 || removeAll) {
+        if (self.FORCEKEEP.indexOf(eventType) < 0 && self.EVENTSNET[eventType].length === 0) {
             destroyEventType(eventType);
         }
 
