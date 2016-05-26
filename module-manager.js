@@ -21,7 +21,7 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
     function initializeModule(module, rehash) {
         var tempModule;
         if (!rehash) {
-            tempModule = require(modulesFolder + module)();
+            tempModule = reRequire(modulesFolder + module)();
         } else {
             if (!fs.existsSync(module)) module = modulesFolder + module;
             tempModule = reRequire(module)();
@@ -45,16 +45,14 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
      */
     function loadModulesFolder (rehash, nick) {
         modulesFolderContent = fs.readdirSync(modulesFolder);
+        console.log(modulesFolderContent);
+
         modulesFolderContent.forEach(function (module) {
             if (module.indexOf('_') === 0) {
                 console.log('Ignored',module,'because of trailing underscore');
                 return false;
             }
-            if (!List[module]) {
-                rehash = false;
-            } else if (typeof List[module].rehasher() === "function") {
-                List[module].rehasher();
-            }
+
             initializeModule(module, rehash);
         });
 
@@ -83,7 +81,16 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
         }
         return true;
     }
-    
+
+    function rehashAll() {
+        Object.keys(List).forEach(function(module) {
+            if (typeof List[module].rehasher() === "function") {
+                console.log('Calling rehasher for ' + module);
+                List[module].rehasher();
+            }
+        });
+    }
+
     function initialize(EventService) {
         Eventer = EventService;
 
@@ -99,8 +106,9 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
             }
 
             if (message.length  === 1) {
-                loadModulesFolder(true, nick);
                 Eventer.client.notice(nick, 'Reloading folder..');
+                rehashAll();
+                loadModulesFolder(true, nick);
                 return;
             }
 

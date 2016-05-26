@@ -79,6 +79,7 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
     var releaseEvent = function (eventType, wordMatch) {
         var found;
         if (!self.EVENTS[eventType]) {
+            console.log('No such event type');
             return false;
         }
 
@@ -98,6 +99,7 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
 
         if (found >= 0) {
             self.EVENTSNET[eventType].splice(found,1);
+            console.log('Found',self.EVENTSNET[eventType][found]);
             return true;
         }
 
