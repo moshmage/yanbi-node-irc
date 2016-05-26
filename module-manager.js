@@ -50,8 +50,11 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
                 console.log('Ignored',module,'because of trailing underscore');
                 return false;
             }
-            if (!List[module]) rehash = false;
-
+            if (!List[module]) {
+                rehash = false;
+            } else if (typeof List[name].rehasher() === "function") {
+                List[name].rehasher();
+            }
             initializeModule(module, rehash);
         });
 
@@ -85,7 +88,7 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
         Eventer = EventService;
 
         /**
-         * ;rehash <module-name>
+         * .rehash <module-name>
          *     makes it so we can reload the module without having to
          *     kill the bot each time.
          */
@@ -95,7 +98,6 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
                 return;
             }
 
-            // todo: make it so we can unload every module
             if (message.length  === 1) {
                 loadModulesFolder(true, nick);
                 Eventer.client.notice(nick, 'Reloading folder..');
@@ -115,6 +117,8 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
             initializeModule(List[message[1]].path, true);
             Eventer.client.notice(nick, 'Reloaded ' + List[message[1]].name + ' v' + List[message[1]].version);
         });
+
+        /** .unload moduleName */
         Eventer.catchEvent('notice', '.unload', function (nick, to, message) {
             message = message.split(' ');
             if (!message[1]) {

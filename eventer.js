@@ -29,21 +29,21 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
      *
      * @param eventType {string}    the event you want to catch
      * @param callback {function}   a callback function to be invoked
-     * @param once     {boolean}    if true, `once` is used instead of `addListener` and no eventType (or NET) is created
-     *
-     * @returns {boolean}           true if successful
+     * @returns {boolean}           false if eventType already exists
      */
     var createEventType = function (eventType, callback, once) {
-        if (typeof self.EVENTS[eventType] === "function" && !once) {
+        if (typeof self.EVENTS[eventType] === "function") {
             return false;
         }
-        if (!once) {
-            self.EVENTS[eventType] = callback;
-            self.EVENTSNET[eventType] = [];
-            client.addListener(eventType, self.EVENTS[eventType]);
-        } else {
+
+        if (once === true) {
             client.once(eventType, callback);
+            return true;
         }
+
+        self.EVENTS[eventType] = callback;
+        self.EVENTSNET[eventType] = [];
+        client.addListener(eventType, self.EVENTS[eventType]);
 
         return true;
     };
@@ -54,7 +54,7 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
      * @param eventType {string}    The event you want to hook to
      * @param wordMatch {object}    The string you want to listen to and the index is supposed to be at
      *          {word: "string",
- *           place: 0}
+     *           place: 0}
      * @param callback              a callback function to be invoked
      * @returns {boolean}           returns false if the Parent Event does not exist
      */
@@ -74,28 +74,27 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
      * Removes a child event from the list
      * @param eventType {string}
      * @param wordMatch {string}
-     * @param removeAll {boolean}   true = removes all child events that match
      * @returns {boolean}
      */
-    var releaseEvent = function (eventType, wordMatch, removeAll) {
-        var found, t;
+    var releaseEvent = function (eventType, wordMatch) {
+        var found;
         if (!self.EVENTS[eventType]) {
             return false;
         }
 
-        self.EVENTSNET[eventType].some(function(object, index) {
-            if (object.wordMatch === wordMatch) {
-                found = index;
-                if (!removeAll) return true;
-            }
-        });
-
         if (self.EVENTSNET[eventType].length === 0) {
+            console.log('Trying to remove a listener',eventType);
             client.removeListener(eventType, self.EVENTS[eventType]);
             delete self.EVENTS[eventType];
             return true;
         }
 
+        self.EVENTSNET[eventType].some(function(object, index){
+            if (object.wordMatch === wordMatch) {
+                found = index;
+                return true;
+            }
+        });
 
         if (found >= 0) {
             self.EVENTSNET[eventType].splice(found,1);
