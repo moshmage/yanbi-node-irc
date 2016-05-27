@@ -1,73 +1,76 @@
 # YANBI
 ### Yet Another Node-IRC Bot Implementation
 ---
-YANBI aims to be a base to make your bot reacto to whatever it likes. To do so it provides a simple interface for node-irc, complete with reloading of modules (thanks to re-require) so you don't have to kill your bot on every change.    
+YANBI aims to be a base to make your bot react to whatever it likes. To do so it provides a simple interface for node-irc, complete with reloading of modules (thanks to [re-require-module](https://www.npmjs.com/package/re-require-module)) so you don't have to kill your bot on every change.
 tl;dr [yanbi-example](https://github.com/moshmage/yanbi-example)
 
 
-#### Basic Configuration
-The bot comes with a simple configuration to feel node-irc needs, a nickname, a network, a channel, and a owner this can be found in `conf/init.conf.js`;
-If you don't provide an object with `server`, `selfNickname`, `channelsArray`, adn `yanbiModules` the bot will use the default configuration and join #mmDev @ snoonet.
-Remember this is built on node-irc, so anything that node-irc can handle as a config this should also be able to; Just don't forget those four important properties.
-
-Don't forget to assign a `owner` property (this is a __very basic__ security property) on the `init.conf.js` file so you can `/notice botName ;rehash` later and reload your modules.
-
-#### Modules
-Making a module is easy. All you need to do is a `module.exports` which exports a function.
-If you need the module to have a IRC context then you need to return a `initialize` function on you `module.exports` function which takes `EventService` as an argument, like so:
+#### Initializing
+`require('yanbi')()` Will use the default configuration, connect to Snoonet and join #mmDev. Provide a [node-irc-like](https://node-irc.readthedocs.io/en/latest/API.html#client) configuration and you'll be good to go:
 
 ```js
-module.exports = function exampleModule() {
-    function initialize(EventService) {
-        EventService.doSomethingWithIt();
-    }
-    return {
-        initialize: initialize
-    }
+// config.js
+module.exports = {
+    debug: false,               // use node-irc debugging
+    server: 'irc.snoonet.org',  // server to connect to
+    channelsArray: ['#mmDev'],  // equal to `channels` array from node-irc
+    selfNickname: 'yanbi',      // the bots nickname
+    nickserv: false,            // if this is filed, bot auto-identifies with the given string
+    owner: 'r3dsmile',          // nickname of the owner
+    yanbiModules: './modules/'  // module folder to be loaded.
 }
 ```
+```js
+    // init.js
+    require('./config.js);
+    require('yanbi')(config);
+```
 
-If, on the other hand, you don't need an IRC context and since module manager is already expecting a function to come out of `module.exports`, all you have to do to get a module starting is:
+
+#### Modules (bot-scripts)
+Modules are javascript files that will be require()d by yanbi from the get go, depending on how you build your module, you will have a node-irc context and reload ability.
+A module is composed, primarily, of function which sets `name`, `version` and `author` as its propreties; `name` is mandatory for the module to be loaded. Since yanbi requires it anyway, to know if these props exist, it unloades it right after via `delete require.cache[]`.
+
+```js
+EXAMPLE = function () {
+    this.name = "Example";
+    this.author = "moshmage@gmail.com";
+    this.version = "0.0.0";
+    this.description = "Example and simple implementation";
+};
+module.exports = EXAMPLE;
+```
 
 ```js
 module.exports = function exampleModule() {
     console.log('this will be ran because the require is self-executing the module.exports');
 }
 ```
-
+##### Giving your module a IRC Context
+This can be achieved by providing a `initialize` proprety, which will be executed by yanbi with the `Eventer` Object:
+```js
+EXAMPLE.prototype.initialize = function (EventerService) {
+    // ...
+};
+```
 ##### Reloading your modules
-Reloading your modules can be done by providing a `rehasher` function on your `module.exports`. This function will be called everytime a `;rehash` event is caught by the Module Manager. Triggering a rehash is made by sending a notice to the bot made of `;rehash <module-name>`.
-
-Use the `rehasher` function to unhook from the events you hooked on the `initialize` call, so your bot doesn't answer twice to the same event when it gets initiated again.
+Reloading your modules is done by issueing a notice to your bot containing `.rehash <module-name>`, if no module name is provided yanbi will reload the entire folder (useful for enabling or disabling modules). yanbi also posesses a `.unload <module-name>` but it **wont** unload your whole folder if you don't type a module-name. Also, this is where the `owner` prop from your configuration is used.
 
 ```js
-EXAMPLE.prototype.rehasher = function () {
-    Eventer.releaseEvent('join','mmBot');
+EXAMPLE.prototype.rehasher = function (EventerService) {
+    // use this function to unhook from Eventer,
+    // delete setIntervals or setTimeouts that havent finished
+    // .. etc
 };
 ```
-
-##### Naming, author and version
-You __must__ provide a `name` string property in your module, so Module Manager knows how to identify your module. If you provide an `author` and `version` both will be logged when `node init.js` is ran.
-
-```js
-// examplemodule.js
-module.exports = function EXAMPLE() {
-    function initialize(EventService) {}
-    function rehasher() {}
-    return {
-        name: 'example',
-        author: 'moshmage@gmail.com',
-        version: '0.1',
-        initialize: initialize,
-        rehasher: rehasher
-    }
-};
-```
-Place the `examplemodule.js` file inside `modules/` folder and you're ready to `node init.js`
+Reloading your modules, if made properly, shouldn't kill your bot and if successfull it will report back with a notice.
 
 ##### Disabling a module
-If the name of the file inside the modules folder starts with a `_` (underscore) that module will be ignored.
-Modules can't be ignored on `;rehash`.
+If the name of the file inside the modules folder starts with a `_` (underscore) that module will be ignored from the loading of the module folder, both on initialize and on rehash.
+
+##### Module Manager
+YANBI returns a `ModuleMan` proprety so you can build around it as well.
+`ModuleMan` contains an Object `List` holding every module, `loadModulesFolder`, `initializeModule` and `unloadModule` which are self explanatory. It also provides an `initialize` but I advise against calling on it, as it will cause all your modules to be re-loaded without calling the `rehasher()` before.
 
 ### Eventer
 
@@ -89,14 +92,17 @@ In the case that you need to create another hook, you can do so by using [`Event
 ##### Releasing a hook
 In the event that you don't want the event to be caught again, you can release it using [`Eventer.releaseEvent()`](https://github.com/moshmage/irc-slap-bot/blob/master/eventer.js#L78)
 
+
+
 ### Botting
-Normal bot stuff as `say`, `notice`, `join` etc.. are the default ones provided by node-irc, you can use them through the `Eventer` object that is passed to all your modules as long as you provide a `initliaze` function. You can use it calling the `client` property that was initiated when you called `node init.js`.
+Botting is done via the `Eventer.client` object. both your modules have it and YANBI exports it as a proprety from the require function. `Eventer.client` is, in itself, the [node-irc](https://node-irc.readthedocs.io/en/latest/API.html#Client.join) lib so you can use all those available comands through it.
 
 ```js
-Eventer.catchEvent('join#channel',function (channel, nick) {
-    Eventer.client.say('#channel', 'Hi, ' + nick); // Greet everyone who joins
+function sayHi(channel, nick) {
+    // channel = "#mmDev", nick = "r3d"
+    Eventer.client.say(channel, 'Hi, ' + nick); // Issues message to #mmDev saying "Hi, r3d"
 });
 ```
 
 ### More examples
-More examples of modules can be seen in `modules/` folder.
+More examples of modules can be seen in the yanbi `modules/` folder.

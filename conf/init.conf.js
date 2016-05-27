@@ -5,6 +5,6 @@ module.exports = {
     channelsArray: ['#mmDev'],
     selfNickname: 'mmBot',
     nickserv: false,
-    owner: 'r3dsmile',
+    owner: '',
     yanbiModules: __dirname + '/../modules/'
 };
