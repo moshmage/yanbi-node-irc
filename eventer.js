@@ -15,12 +15,16 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
         FORCEKEEP: [],
         conf : {},
         nick: IrcConf.selfNickname,
-        nickserv: IrcConf.nickserv
+        nickserv: IrcConf.nickserv,
+        owner: IrcConf.owner
     };
-    delete IrcConf['selfNickname'];
+
     IrcConf.channels = IrcConf.channelsArray;
+
+    delete IrcConf['selfNickname'];
     delete IrcConf.channelsArray;
     delete IrcConf.nickserv;
+    delete IrcConf.owner;
 
     var client = new IrcLib.Client(IrcConf.server, self.nick, IrcConf);
 
