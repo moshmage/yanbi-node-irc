@@ -27,6 +27,11 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
             tempModule = reRequire(module)();
         }
 
+        if (!tempModule.name) {
+            unloadModule(module, true);
+            return;
+        }
+
         console.log((!rehash) ? 'Loaded' : 'Reloaded',
             tempModule.name,tempModule.version || '', tempModule.author || '');
 
@@ -63,10 +68,20 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
 
     /**
      * Unloads a module both from the require() and YANBI, calling the .rehasher() if it exists as a function
-     * @param name      {string}    Module name
-     * @param callback {function}   callback if you need, it callsback with 'name' as its argument
+     * @param name       {string}    Module name
+     * @param force     {boolean}    if true, and you provide a path ending with .js, it will delete its require cache
+     * @param [callback] {function}    callback if you need, it calls back with 'name' as its argument
+
      */
-    function unloadModule(name, callback) {
+    function unloadModule(name, force, callback) {
+
+        if (force) {
+            if (name.match(/\.js$/) && fs.existsSync(name)) {
+                delete require.cache[name];
+                return true;
+            }
+            return;
+        }
 
         if (typeof List[name].rehasher() === "function") {
             List[name].rehasher();
@@ -120,7 +135,7 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
                 return;
             }
 
-            List[message[1]].rehasher();
+            List[message[1]].rehasher(EventService);
             initializeModule(List[message[1]].path, true);
             Eventer.client.notice(nick, 'Reloaded ' + List[message[1]].name + ' v' + List[message[1]].version);
         });
