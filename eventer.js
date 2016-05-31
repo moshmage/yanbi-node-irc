@@ -21,10 +21,11 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
 
     IrcConf.channels = IrcConf.channelsArray;
 
-    delete IrcConf['selfNickname'];
+    delete IrcConf.selfNickname;
     delete IrcConf.channelsArray;
     delete IrcConf.nickserv;
     delete IrcConf.owner;
+    delete IrcConf.yanbiModules;
 
     var client = new IrcLib.Client(IrcConf.server, self.nick, IrcConf);
 
