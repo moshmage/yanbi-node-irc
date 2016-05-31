@@ -22,7 +22,7 @@ module.exports = {
 ```
 ```js
     // init.js
-    require('./config.js);
+    require('./config.js');
     require('yanbi')(config);
 ```
 
@@ -41,11 +41,6 @@ EXAMPLE = function () {
 module.exports = EXAMPLE;
 ```
 
-```js
-module.exports = function exampleModule() {
-    console.log('this will be ran because the require is self-executing the module.exports');
-}
-```
 ##### Giving your module a IRC Context
 This can be achieved by providing a `initialize` proprety, which will be executed by yanbi with the `Eventer` Object:
 ```js
