@@ -67,6 +67,11 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
             }
         } else {
             console.log('Folder',modulesFolder,'does not exist.');
+            console.log('Create it, add a `owner` property to your config');
+            console.log('Add some bot-scripts inside, and then issue');
+            console.log('/notice <bot-nickname> .rehash');
+            console.log('\n');
+            console.log('That should reload the folder again.');
         }
     }
 
