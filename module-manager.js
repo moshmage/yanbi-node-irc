@@ -50,8 +50,7 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
      */
     function loadModulesFolder (rehash, nick) {
         modulesFolderContent = fs.readdirSync(modulesFolder);
-        console.log(modulesFolderContent);
-
+        console.log('Found',modulesFolderContent.length,'modules..');
         modulesFolderContent.forEach(function (module) {
             if (module.indexOf('_') === 0) {
                 console.log('Ignored',module,'because of trailing underscore');
