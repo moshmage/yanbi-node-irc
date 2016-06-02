@@ -13,10 +13,12 @@ function checkConfig(config) {
 
 var YANBI = function(ircConf) {
     ircConf = checkConfig(ircConf) || require('./conf/init.conf.js');
+    var yanbiModules = ircConf.yanbiModules;
+    var botScriptOwner = ircConf.owner;
     var Eventer = new require('./eventer.js')(irc, ircConf);
 
     var Dispatcher = require('./dispatcher.js')();
-    var ModuleMan = require('./module-manager')(ircConf.owner, ircConf.yanbiModules);
+    var ModuleMan = require('./module-manager')(botScriptOwner, yanbiModules);
 
     Dispatcher.initialize(Eventer);
     ModuleMan.initialize(Eventer);
