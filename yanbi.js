@@ -15,6 +15,7 @@ var YANBI = function(ircConf) {
     ircConf = checkConfig(ircConf) || require('./conf/init.conf.js');
     var yanbiModules = ircConf.yanbiModules;
     var botScriptOwner = ircConf.owner;
+    var identifyPassword = ircConf.nickserv || false;
     var Eventer = new require('./eventer.js')(irc, ircConf);
 
     var Dispatcher = require('./dispatcher.js')();
@@ -30,8 +31,8 @@ var YANBI = function(ircConf) {
     Eventer.createEventType('registered', function () {
         ModuleMan.loadModulesFolder(false);
 
-        if (ircConf.nickserv) {
-            Eventer.client.say('NickServ','identify ' + ircConf.nickserv);
+        if (identifyPassword) {
+            Eventer.client.say('NickServ','identify ' + identifyPassword);
         }
     });
 
