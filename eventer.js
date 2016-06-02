@@ -42,7 +42,7 @@ Eventer = module.exports = function Eventer(IrcLib, IrcConf) {
      * @returns {boolean}           false if eventType already exists
      */
     var createEventType = function (eventType, callback, once) {
-        if (typeof self.EVENTS[eventType] === "function") {
+        if (typeof self.EVENTS[eventType] === "function" && !once) {
             return false;
         }
 
