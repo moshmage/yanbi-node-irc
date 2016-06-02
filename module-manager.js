@@ -49,19 +49,24 @@ module.exports = function ModuleMan(Owner, modulesFolder) {
      * @param nick {string}           if you're calling from ;rehash, this will be used to /notice nick reloaded report
      */
     function loadModulesFolder (rehash, nick) {
-        modulesFolderContent = fs.readdirSync(modulesFolder);
-        console.log('Found',modulesFolderContent.length,'modules..');
-        modulesFolderContent.forEach(function (module) {
-            if (module.indexOf('_') === 0) {
-                console.log('Ignored',module,'because of trailing underscore');
-                return false;
+        if (fs.existsSync(modulesFolder)) {
+            modulesFolderContent = fs.readdirSync(modulesFolder);
+            console.log('Found',modulesFolderContent.length,'modules..');
+            modulesFolderContent.forEach(function (module) {
+                if (module.indexOf('_') === 0) {
+                    console.log('Ignored',module,'because of trailing underscore');
+                    return false;
+                }
+
+                initializeModule(module, rehash);
+
+            });
+            
+            if (nick) {
+                Eventer.client.notice(nick, 'Folder reloaded :D');
             }
-
-            initializeModule(module, rehash);
-        });
-
-        if (nick) {
-            Eventer.client.notice(nick, 'Folder reloaded :D');
+        } else {
+            console.log('Folder',modulesFolder,'does not exist.');
         }
     }
 
