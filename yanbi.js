@@ -12,7 +12,12 @@ class Yanbi {
 
         this.yanbiConfig = YanbiConfig;
         this.ircContext = new IrcContext(IrcConfig);
-        this.moduleManager = new ModuleManager(this.ircContext.events, this.yanbiConfig, onReady);
+        try {
+            this.moduleManager = new ModuleManager(this.ircContext.events, this.yanbiConfig, onReady);
+        } catch (e) {
+            console.log(e);
+        }
+
     }
 }
 

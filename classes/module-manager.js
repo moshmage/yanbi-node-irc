@@ -21,32 +21,34 @@ class ModuleManager {
         this.modulesPath = options.modulesPath;
         this.botOwner = options.botOwner;
 
-        this.events.listen('notice', '.rehash', (nick, to, message) => {
-            if (!this.isBotOwner(nick)) return;
-            message = message.split(' ');
-            let moduleName = message[1];
-            this.rehashModule(moduleName, nick);
-
-        });
-        this.events.listen('notice', '.rehash', (nick, to, message) => {
-            message = message.split(' ');
-            let moduleName = message[1];
-            if (!moduleName) {
-                this.events.client.notice(nick, 'Need a module to unload');
-                return;
-            }
-
-            if (!this.getModule(moduleName)) {
-                this.events.client.notice(nick, 'Unexisting module: ' + moduleName);
-                return;
-            }
-
-            this.unloadModule(message[1]);
-            this.events.client.notice(nick, 'Unloaded: ' + moduleName + ' :)');
-        });
-
         this.events.addType('registered', () => {
             this.loadFromFolder();
+
+            this.events.listen('notice', '.rehash', (nick, to, message) => {
+                if (!this.isBotOwner(nick)) return;
+                message = message.split(' ');
+                let moduleName = message[1];
+                this.rehashModule(moduleName, nick);
+
+            });
+            
+            this.events.listen('notice', '.rehash', (nick, to, message) => {
+                message = message.split(' ');
+                let moduleName = message[1];
+                if (!moduleName) {
+                    this.events.client.notice(nick, 'Need a module to unload');
+                    return;
+                }
+
+                if (!this.getModule(moduleName)) {
+                    this.events.client.notice(nick, 'Unexisting module: ' + moduleName);
+                    return;
+                }
+
+                this.unloadModule(message[1]);
+                this.events.client.notice(nick, 'Unloaded: ' + moduleName + ' :)');
+            });
+
             if (onReady && typeof onReady === "function") {
                 onReady(this.events);
             }
