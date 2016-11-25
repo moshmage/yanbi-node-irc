@@ -44,7 +44,11 @@ export class ModuleManager {
 
             this.unloadModule(message[1]);
             this.events.client.notice(nick, 'Unloaded: ' + moduleName + ' :)');
-        })
+        });
+
+        this.events.addType('registered', () => {
+            this.loadFromFolder();
+        }, true);
     }
 
     isBotOwner(nick) {
