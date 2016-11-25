@@ -7,9 +7,10 @@ const defaultConfig = {
     nick: ''
 };
 
+let conf = fs.readFileSync('irc.config.json');
+if (!conf) throw Error('Missing configuration file: irc.config.json');
 
-if (!fs.existsSync('/irc.config.json')) throw Error('Missing configuration file: irc.config.json');
-let options = JSON.parse(fs.readFileSync('irc.config.json', 'utf-8'));
+let options = JSON.parse(conf);
 
 const IrcConfig = new Config(options, required, defaultConfig);
 module.exports = IrcConfig;
