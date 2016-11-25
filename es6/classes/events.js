@@ -31,20 +31,19 @@ export class Events {
      * @param eventType {string}
      * @param callback {function}
      * @param once {boolean}        use .once instead of addListener
-     * @returns {boolean}           false if eventType
+     * @void
      */
     addType(eventType, callback, once) {
         if (typeof this.typeList[eventType] === 'EventType' && !once) return false;
 
         if (once) {
             this.client.once(eventType, callback);
-            return true;
+        } else {
+            this.typeList[eventType] = new EventType(eventType, callback);
+            this.typeEvents[eventType] = [];
+            this.client.addListener(eventType, this.eventTypes[eventType].callback);
         }
-
-        this.typeList[eventType] = new EventType(eventType, callback);
-        this.typeEvents[eventType] = [];
-        this.client.addListener(eventType, this.eventTypes[eventType].callback);
-        return true;
+        console.log(`Info: Created ${eventType} type: ${(once) ? 'once' : 'forever'}`);
     }
 
     /**
@@ -74,7 +73,9 @@ export class Events {
      */
     listen(eventType, matchObject, callback) {
         if (!this.created(eventType)) throw Error(`No such EventType: ${eventType}`);
-        this.typeEvents[eventType].push(new Event(matchObject, callback));
+        let event = new Event(matchObject, callback);
+        this.typeEvents[eventType].push(event);
+        console.log(`Info: Listening for ${event.matchString} at ${event.onIndex} when ${eventType}`);
     }
 
     /**
@@ -85,19 +86,21 @@ export class Events {
      */
     mute(eventType, matchObject, allFromType) {
         if (!this.created(eventType)) throw Error(`No such EventType: ${eventType}`);
-
+        let count = 0;
         if (allFromType) {
             this.typeEvents[eventType] = [];
-            return;
+        } else {
+            this.typeEvents[eventType].forEach((event, index) => {
+                let match = matchObject && matchObject.word || matchObject;
+                let onIndex = matchObject && matchObject.place || 0;
+                if (event.matchString === match && event.onIndex === onIndex) {
+                    this.typeEvents.splice(index, 1);
+                    count++;
+                }
+            });
         }
-
-        this.typeEvents[eventType].forEach((event, index) => {
-            let match = matchObject && matchObject.word || matchObject;
-            let onIndex = matchObject && matchObject.place || 0;
-            if (event.matchString === match && event.onIndex === onIndex) {
-                this.typeEvents.splice(index, 1);
-            }
-        });
+        
+        console.log(`Info: Removed ${(allFromType) ? 'all' : count} from ${eventType} when ${matchObject}`);
     }
 
     created(eventType) {return typeof this.typeList[eventType] === 'EventType'};
