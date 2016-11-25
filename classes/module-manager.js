@@ -14,7 +14,7 @@ class Module {
 }
 
 class ModuleManager {
-    constructor(events, options) {
+    constructor(events, options, onReady) {
         if (!events) throw Error('ModuleManager needs the Events class to work');
         this.events = events;
         this.modules = {};
@@ -47,6 +47,9 @@ class ModuleManager {
 
         this.events.addType('registered', () => {
             this.loadFromFolder();
+            if (onReady && typeof onReady === "function") {
+                onReady(this.events);
+            }
         }, true);
     }
 
