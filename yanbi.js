@@ -1,45 +1,20 @@
 /**
- * Created by Mosh Mage on 5/21/2016.
+ * Created by Mosh Mage on 11/25/2016.
  */
-var irc = require('irc');
+const irc = require('irc');
+const IrcContext = require('classes/irc-context.js');
+const ModuleManager = require('classes/module-manager.js');
 
-function checkConfig(config) {
-    if (config && config.server && config.channelsArray && config.selfNickname && config.yanbiModules) {
-        return config;
+class Yanbi {
+    constructor() {
+        const IrcConfig = require('config/irc.config.js');
+        const YanbiConfig = require('config/yanbi.config.js');
+
+        this.yanbiConfig = YanbiConfig;
+        this.ircContext = new IrcContext(irc, IrcConfig);
+        this.moduleManager = new ModuleManager(this.ircContext.events, this.yanbiConfig);
+        this.moduleManager.loadFromFolder();
     }
-
-    return false;
 }
 
-var YANBI = function(ircConf) {
-    ircConf = checkConfig(ircConf) || require('./conf/init.conf.js');
-    var yanbiModules = ircConf.yanbiModules;
-    var botScriptOwner = ircConf.owner;
-    var identifyPassword = ircConf.nickserv || false;
-    var Eventer = new require('./eventer.js')(irc, ircConf);
-
-    var Dispatcher = require('./dispatcher.js')();
-    var ModuleMan = require('./module-manager')(botScriptOwner, yanbiModules);
-
-    Dispatcher.initialize(Eventer);
-    ModuleMan.initialize(Eventer);
-
-    /**
-     * Hook on the 'registered' event from node-irc
-     * and use that to load our modules
-     */
-    Eventer.createEventType('registered', function () {
-        ModuleMan.loadModulesFolder(false);
-
-        if (identifyPassword) {
-            Eventer.client.say('NickServ','identify ' + identifyPassword);
-        }
-    });
-
-    return {
-        Eventer: Eventer,
-        ModuleMan: ModuleMan
-    }
-};
-
-module.exports = YANBI;
+module.exports = Yanbi;

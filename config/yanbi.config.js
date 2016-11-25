@@ -7,6 +7,7 @@ const Config = require('../classes/config');
 
 
 const required = ['modules', 'owner'];
+
 const defaultConfig = {
     modules: 'yanbi-modules/',
     owner: '',
