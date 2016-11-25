@@ -4,7 +4,7 @@
 const irc = require('irc');
 const fs = require('fs');
 
-import {IrcConfig} from 'config/irc.config';
-import {YanbiConfig} from 'config/yanbi.config';
-import {IrcContext} from 'classes/irc-context';
-
+const IrcConfig = require('config/irc.config');
+const YanbiConfig = require('config/yanbi.config');
+const IrcContext = require('classes/irc-context');
+const ModuleManager = require('classes/module-manager');

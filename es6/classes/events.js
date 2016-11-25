@@ -25,7 +25,7 @@ class Event {
     }
 }
 
-export class Events {
+class Events {
     constructor(client) {
         this.parent = {};
         this.childs = {};
@@ -114,3 +114,5 @@ export class Events {
     getType(eventName) { return this.created(eventName) && this.parent[eventName]; }
     getChilds(eventName) { return this.childs[eventName]; }
 }
+
+module.export = Events;

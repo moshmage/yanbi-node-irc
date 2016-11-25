@@ -1,4 +1,4 @@
-import {Config} from '../classes/config'
+const Config = require('../classes/config');
 
 const required = ['server', 'channel', 'nickname'];
 const defaultConfig = {
@@ -7,4 +7,9 @@ const defaultConfig = {
     nick: ''
 };
 
-export const IrcConfig = Config;
+
+if (!fs.existsSync('/irc.config.json')) throw Error('Missing configuration file: irc.config.json');
+let options = JSON.parse(fs.readFileSync('/irc.config.json', 'utf-8'));
+
+const IrcConfig = new Config(options, required, defaultConfig);
+module.export = IrcConfig;

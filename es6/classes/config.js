@@ -2,7 +2,7 @@
  * Created by Mosh Mage on 11/25/2016.
  */
 "use strict";
-export class Config {
+class Config {
     constructor(options, required = [], defaults={}) {
         this._defaults = defaults;
         this._required = required;
@@ -30,3 +30,4 @@ export class Config {
 }
 
 
+module.export = Config;

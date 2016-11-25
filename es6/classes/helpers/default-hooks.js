@@ -59,4 +59,5 @@ class DefaultHooks {
     handlePartEvent(channel, nick) { this.callJoinPartChilds('part', channel, nick)  }
 }
 
-export const defaultHooks = new DefaultHooks();
+const defaultHooks = new DefaultHooks();
+module.export = defaultHooks;

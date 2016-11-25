@@ -13,7 +13,7 @@ class Module {
     }
 }
 
-export class ModuleManager {
+class ModuleManager {
     constructor(modulesPath, events, botOwner) {
         if (!modulesPath) throw Error('ModuleManager needs a path to load from');
         if (!events) throw Error('ModuleManager needs the Events class to work');
@@ -128,3 +128,4 @@ export class ModuleManager {
     }
 
 }
+module.export = ModuleManager;
