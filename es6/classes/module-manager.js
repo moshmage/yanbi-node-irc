@@ -9,7 +9,6 @@ class Module {
     constructor(module) {
         if (!module) throw Error(`Can't load an undefined module`);
         if (typeof module.initialize !== "function") throw Error(`Module ${module.name} needs a initialize public function`);
-        this.moduleName = module.name;
         this.self = module;
     }
 }
@@ -30,7 +29,6 @@ export class ModuleManager {
             this.rehashModule(moduleName, nick);
 
         });
-
         this.events.listen('notice', '.rehash', (nick, to, message) => {
             message = message.split(' ');
             let moduleName = message[1];
@@ -98,8 +96,6 @@ export class ModuleManager {
         this.events.client.notice(nick, `Reloaded ${moduleName}; v${this.getModule(moduleName).version}`);
     }
 
-
-
     /**
      * Unloads a module from @this.modules and its require-cache counter-part
      * @param name
@@ -116,7 +112,7 @@ export class ModuleManager {
         console.log(`Info: Unloaded ${name}: ${!!this.modules[name]}`)
     }
 
-    loadFromFolder(rehashing, nick) {
+    loadFromFolder() {
         if (!fs.existsSync(this.modulesPath)) throw Error(`Folder ${this.modulesPath} does not exist`);
         fs.readdirSync(this.modulesPath).forEach(file => {
             if (file.indexOf('_') !== 0) {
