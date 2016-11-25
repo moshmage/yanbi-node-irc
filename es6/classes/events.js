@@ -50,7 +50,7 @@ class Events {
         } else {
             this.parent[eventName] = new EventType(eventName, callback);
             this.childs[eventName] = [];
-            this.client.addListener(eventName, this.eventTypes[eventName].callback);
+            this.client.addListener(eventName, this.parent[eventName].callback);
         }
         console.log(`Info: Created ${eventName} type: ${(once) ? 'once' : 'forever'}`);
     }
