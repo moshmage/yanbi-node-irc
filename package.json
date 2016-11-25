@@ -7,9 +7,7 @@
   "license": "ISC",
   "dependencies": {
     "irc": "^0.5.0",
-    "isnumeric": "^0.3.1",
-    "re-require-module": "^1.0.2",
-    "rpg-dice": "^0.6.0"
+    "re-require-module": "^1.0.2"
   },
   "devDependencies": {},
   "scripts": {
@@ -23,7 +21,8 @@
     "irc",
     "bot",
     "node-irc",
-    "irc bot"
+    "irc bot",
+    "yanbi"
   ],
   "bugs": {
     "url": "https://github.com/moshmage/yanbi-node-irc/issues"

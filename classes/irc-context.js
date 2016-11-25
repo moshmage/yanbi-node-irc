@@ -1,7 +1,7 @@
 /**
  * Created by Mosh Mage on 11/25/2016.
  */
-const defaultHooks = require('helpers/default-hooks.js'); 
+const defaultHooks = require('./helpers/default-hooks.js'); 
 const Events = require('./events.js');
 
 class IrcContext {
