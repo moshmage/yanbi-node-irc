@@ -19,14 +19,9 @@ class Config {
             }
             throw Error(`Missing required configuration value: ${key}`);
         });
+
+        return this._options;
     }
-
-    get defaults() {return this._defaults; }
-    get options() {return this._options; }
-    get required() {return this._required; }
-
-    set defaults(v) {return false;}
-    set required(v) {return false;}
 }
 
 
