@@ -14,13 +14,12 @@ class Module {
 }
 
 class ModuleManager {
-    constructor(modulesPath, events, botOwner) {
-        if (!modulesPath) throw Error('ModuleManager needs a path to load from');
+    constructor(events, options) {
         if (!events) throw Error('ModuleManager needs the Events class to work');
         this.events = events;
         this.modules = {};
-        this.modulesPath = modulesPath;
-        this.botOwner = botOwner;
+        this.modulesPath = options.modulesPath;
+        this.botOwner = options.botOwner;
 
         this.events.listen('notice', '.rehash', (nick, to, message) => {
             if (!this.isBotOwner(nick)) return;
