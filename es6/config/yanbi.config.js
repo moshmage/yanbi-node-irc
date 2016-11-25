@@ -12,10 +12,11 @@ const defaultConfig = {
     owner: '',
     authenticate: ''
 };
+let conf = fs.readFileSync('yanbi.config.json', 'utf-8');
+if (!conf) throw Error('Missing configuration file: yanbi.config.json');
 
-if (!fs.existsSync('/yanbi.config.json')) throw Error('Missing configuration file: yanbi.config.json');
-let options = JSON.parse(fs.readFileSync('/yanbi.config.json', 'utf-8'));
+let options = JSON.parse(conf);
 
 const YanbiConfig = new Config(options, required, defaultConfig);
 
-module.export = YanbiConfig;
+module.exports = YanbiConfig;

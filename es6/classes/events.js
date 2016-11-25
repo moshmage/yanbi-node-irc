@@ -115,4 +115,4 @@ class Events {
     getChilds(eventName) { return this.childs[eventName]; }
 }
 
-module.export = Events;
+module.exports = Events;

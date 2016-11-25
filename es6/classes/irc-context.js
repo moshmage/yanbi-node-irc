@@ -1,7 +1,7 @@
 /**
  * Created by Mosh Mage on 11/25/2016.
  */
-import {defaultHooks} from 'helpers/default-hooks.js'; 
+const defaultHooks = require('helpers/default-hooks.js'); 
 
 class IrcContext {
     constructor(irc, ircConfig) {
@@ -12,4 +12,4 @@ class IrcContext {
         defaultHooks.create(this.events);
     }
 }
-module.export = IrcContext;
+module.exports = IrcContext;

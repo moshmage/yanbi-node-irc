@@ -4,7 +4,6 @@
 "use strict";
 class Config {
     constructor(options, required = [], defaults={}) {
-        this._defaults = defaults;
         this._required = required;
         this._options = (Object.keys(options).length > 0) ? options : defaults || {};
         let optionKeys = Object.keys(this._options);
@@ -19,10 +18,9 @@ class Config {
             }
             throw Error(`Missing required configuration value: ${key}`);
         });
-
-        return this._options;
     }
+
+    get options() {return this._options; }
 }
 
-
-module.export = Config;
+module.exports = Config;

@@ -60,4 +60,4 @@ class DefaultHooks {
 }
 
 const defaultHooks = new DefaultHooks();
-module.export = defaultHooks;
+module.exports = defaultHooks;

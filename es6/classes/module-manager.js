@@ -128,4 +128,4 @@ class ModuleManager {
     }
 
 }
-module.export = ModuleManager;
+module.exports = ModuleManager;
