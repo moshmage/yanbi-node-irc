@@ -72,7 +72,7 @@ export class Events {
      * @param callback {Function}
      * @void
      */
-    on(eventType, matchObject, callback) {
+    listen(eventType, matchObject, callback) {
         if (!this.created(eventType)) throw Error(`No such EventType: ${eventType}`);
         this.typeEvents[eventType].push(new Event(matchObject, callback));
     }
@@ -83,7 +83,7 @@ export class Events {
      * @param matchObject {string|object}          "string" or {word: "string", place: 0}
      * @param allFromType {boolean}
      */
-    off(eventType, matchObject, allFromType) {
+    mute(eventType, matchObject, allFromType) {
         if (!this.created(eventType)) throw Error(`No such EventType: ${eventType}`);
 
         if (allFromType) {
