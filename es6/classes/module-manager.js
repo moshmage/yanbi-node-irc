@@ -15,12 +15,42 @@ class Module {
 }
 
 export class ModuleManager {
-    constructor(modulesPath, events) {
+    constructor(modulesPath, events, botOwner) {
         if (!modulesPath) throw Error('ModuleManager needs a path to load from');
         if (!events) throw Error('ModuleManager needs the Events class to work');
         this.events = events;
         this.modules = {};
         this.modulesPath = modulesPath;
+        this.botOwner = botOwner;
+
+        this.events.listen('notice', '.rehash', (nick, to, message) => {
+            if (!this.isBotOwner(nick)) return;
+            message = message.split(' ');
+            let moduleName = message[1];
+            this.rehashModule(moduleName, nick);
+
+        });
+
+        this.events.listen('notice', '.rehash', (nick, to, message) => {
+            message = message.split(' ');
+            let moduleName = message[1];
+            if (!moduleName) {
+                this.events.client.notice(nick, 'Need a module to unload');
+                return;
+            }
+
+            if (!this.getModule(moduleName)) {
+                this.events.client.notice(nick, 'Unexisting module: ' + moduleName);
+                return;
+            }
+
+            this.unloadModule(message[1]);
+            this.events.client.notice(nick, 'Unloaded: ' + moduleName + ' :)');
+        })
+    }
+
+    isBotOwner(nick) {
+        return this.botOwner.toLowerCase() === nick.toLowerCase();
     }
 
     /**
@@ -29,7 +59,7 @@ export class ModuleManager {
      * @returns {*}
      */
     getModule(name) {
-        return this.modules[name].self;
+        return this.modules[name] && this.modules[name].self;
     }
 
     /**
@@ -51,6 +81,24 @@ export class ModuleManager {
         console.log(`${!rehash ? 'loaded' : 'rehashed'} ${tempModule.name}@${tempModule.version} by ${tempModule.author}`);
 
     }
+
+    rehashModule(moduleName, nick) {
+        let module = this.getModule(moduleName);
+
+        if (!module) {
+            this.events.client.notice(nick, `No such module ${moduleName}`);
+            return;
+        }
+        if (!module.rehasher) {
+            this.events.client.notice(nick, `${moduleName} is not rehashable`);
+            return;
+        }
+
+        module.rehasher(this.events);
+        this.events.client.notice(nick, `Reloaded ${moduleName}; v${this.getModule(moduleName).version}`);
+    }
+
+
 
     /**
      * Unloads a module from @this.modules and its require-cache counter-part
