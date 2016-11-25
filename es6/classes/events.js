@@ -30,6 +30,9 @@ class Events {
         this.parent = {};
         this.childs = {};
         this.client = client;
+        this.client.addListener('error', (message) => {
+            console.log('Error:', message);
+        });
     }
 
     /**
