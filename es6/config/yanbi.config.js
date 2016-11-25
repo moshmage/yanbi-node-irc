@@ -2,7 +2,7 @@
  * Created by Mosh Mage on 11/25/2016.
  */
 "use strict";
-import {Confg} from '../classes/config'
+import {Config} from '../classes/config'
 const required = ['modules', 'owner'];
 
 const defaultConfig = {
@@ -11,4 +11,4 @@ const defaultConfig = {
     authenticate: ''
 };
 
-export const YanbiConfig = new Confg(options, required, defaultConfig);
+export const YanbiConfig = Config;

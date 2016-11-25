@@ -1,4 +1,4 @@
-import {Confg} from '../classes/config'
+import {Config} from '../classes/config'
 
 const required = ['server', 'channel', 'nickname'];
 const defaultConfig = {
@@ -7,4 +7,4 @@ const defaultConfig = {
     nick: ''
 };
 
-export const IrcConfig = new Confg(options, required, defaultConfig);
+export const IrcConfig = Config;

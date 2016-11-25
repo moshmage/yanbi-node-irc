@@ -6,4 +6,5 @@ const fs = require('fs');
 
 import {IrcConfig} from 'config/irc.config';
 import {YanbiConfig} from 'config/yanbi.config';
+import {IrcContext} from 'classes/irc-context';
 
