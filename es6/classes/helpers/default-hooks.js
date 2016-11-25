@@ -47,6 +47,16 @@ class DefaultHooks {
         });
     }
 
+    /**
+     * Finds <word|a phrase> ({string} value) in received message
+     * callsback with "nick", "to" and "text" as arguments;
+     * 
+     * this.event.listen('message#', {word:'!hello', place: 0}, (nick, to, text) => {})
+     * ------ 
+     * @param nick      nick of sender
+     * @param to        channel or (your) nick if PM
+     * @param text      text from message
+     */
     handleMessageFromChannel(nick, to, text) {
         this.events.getChilds('message#').forEach(event => {
             if (event.matches(text, true)) {
