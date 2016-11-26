@@ -26,7 +26,6 @@ class ModuleManager {
         this.events.addType('registered', () => {
 
             defaultHooks.create(this.events);
-            console.log(this.events);
             this.loadFromFolder();
             
             this.events.listen('notice', '.rehash', (nick, to, message) => {
@@ -37,7 +36,7 @@ class ModuleManager {
 
             });
 
-            this.events.listen('notice', '.rehash', (nick, to, message) => {
+            this.events.listen('notice', '.unload', (nick, to, message) => {
                 message = message.split(' ');
                 let moduleName = message[1];
                 if (!moduleName) {

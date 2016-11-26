@@ -1,6 +1,7 @@
 /**
  * Created by Mosh Mage on 11/25/2016.
  */
+
 class EventType {
     constructor(type, callback) {
         this.type = type;
@@ -15,13 +16,13 @@ class Event {
         this.onIndex = matchObject && matchObject.place || 0;
         this.callback = callback;
 
-        if (!this.match) throw Error('Event needs a match parameter of type string string or object of {word: string, place: number}');
+        if (!this.matchString) throw Error('Event needs a matchString parameter of type string string or object of {word: string, place: number}');
     }
 
     matches(input, withIndex) {
-        input = new RegExp(input,i);
+        input = new RegExp(input,'i');
         if (!withIndex) return this.matchString.search(input) > -1;
-        return input.search(input) === this.onIndex;
+        return this.matchString.search(input) === this.onIndex;
     }
 }
 
@@ -84,7 +85,7 @@ class Events {
         if (!this.created(eventName)) throw Error(`No such EventType: ${eventName}`);
         let event = new Event(matchObject, callback);
         this.childs[eventName].push(event);
-        console.log(`Info: Listening for ${event.matchString} at ${event.onIndex} when ${eventName}`);
+        // console.log(`Info: on ${eventName} -> ${event.matchString} @ ${event.onIndex}`);
     }
 
     /**
@@ -112,7 +113,7 @@ class Events {
         console.log(`Info: Removed ${(allFromType) ? 'all' : count} from ${eventName} when ${matchObject}`);
     }
 
-    created(eventName) {return typeof this.parent[eventName] === 'EventType'};
+    created(eventName) { return this.parent[eventName] instanceof EventType };
 
     getType(eventName) { return this.created(eventName) && this.parent[eventName]; }
     getChilds(eventName) { return this.childs[eventName]; }

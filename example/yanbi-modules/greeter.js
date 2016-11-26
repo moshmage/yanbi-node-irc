@@ -6,14 +6,12 @@ class Greeter {
         this.name = "Greeter";
         this.version = "1.0";
         this.author = "moshmage@gmail.com";
-        this.events = null;
-    }
 
-    initialize(events) {
         this.events = events;
-        this.events.listen('join', '#yanbi', this.greetNick);
+        this.events.listen('join', '#yanbi', (channel, nick) => this.greetNick(channel, nick));
     }
 
+    initialize() {}
     rehasher() {}
 
     greetNick(channel, nick) {

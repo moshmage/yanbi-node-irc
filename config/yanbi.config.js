@@ -6,10 +6,10 @@ const fs = require('fs');
 const Config = require('../classes/config');
 
 
-const required = ['modules', 'owner'];
+const required = ['modulesPath', 'owner'];
 
 const defaultConfig = {
-    modules: 'yanbi-modules/',
+    modulesPath: 'yanbi-modules/',
     owner: '',
     authenticate: ''
 };

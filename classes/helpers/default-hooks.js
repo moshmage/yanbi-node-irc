@@ -9,11 +9,11 @@ class DefaultHooks {
     
     create(events) {
         this.events = events;
-        this.events.addType('join', this.handleJoinEvent, false);
-        this.events.addType('part', this.handlePartEvent, false);
-        this.events.addType('names', this.handleNamesEvent, false);
-        this.events.addType('notice', this.handleNoticeEvent, false);
-        this.events.addType('message#', this.handleMessageFromChannel, false);
+        this.events.addType('join', (channel, nick) => this.handleJoinEvent(channel, nick), false);
+        this.events.addType('part', (channel, nick) => this.handlePartEvent(channel, nick), false);
+        this.events.addType('names', (channel, nicks) => this.handleNamesEvent(channel, nicks), false);
+        this.events.addType('notice', (nick, to, text) => this.handleNoticeEvent(nick, to, text), false);
+        this.events.addType('message#', (nick, to, text) => this.handleMessageFromChannel(nick, to, text), false);
 
     }
 
@@ -29,7 +29,7 @@ class DefaultHooks {
     handleNamesEvent(channel, nicks) {
         this.events.getChilds('names').forEach(event => {
             if (event.onIndex === true) {
-                nicks.some(nick => {
+                Object.keys(nicks).some(nick => {
                     if (event.matches(nick, false)) {
                         event.callback(channel, nicks, nick);
                         return true
