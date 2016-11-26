@@ -3,6 +3,7 @@
  */
 "use strict";
 const fs = require('fs');
+const path = require('path');
 const reRequire = require('re-require-module').reRequire;
 const defaultHooks = require('./helpers/default-hooks.js');
 
@@ -19,7 +20,7 @@ class ModuleManager {
         if (!events) throw Error('ModuleManager needs the Events class to work');
         this.events = events;
         this.modules = {};
-        this.modulesPath = options.modulesPath;
+        this.modulesPath = path.normalize(process.cwd() + options.modulesPath);
         this.botOwner = options.botOwner;
 
         this.events.addType('registered', () => {
