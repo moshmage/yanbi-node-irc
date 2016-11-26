@@ -1,103 +1,169 @@
 # YANBI
 ### Yet Another Node-IRC Bot Implementation
 ---
-YANBI aims to be a base to make your bot react to whatever it likes. To do so it provides a simple interface for node-irc, complete with reloading of modules (thanks to [re-require-module](https://www.npmjs.com/package/re-require-module)) so you don't have to kill your bot on every change.
-tl;dr [yanbi-example](https://github.com/moshmage/yanbi-example)
+tl;dr YANBI aims to be a moduler on top of [irc](https://www.npmjs.com/package/irc). It should be easier to write bots.
 
-
-#### Initializing
-`require('yanbi')()` Will use the default configuration, connect to Snoonet and join #mmDev. Provide a [node-irc-like](https://node-irc.readthedocs.io/en/latest/API.html#client) configuration and you'll be good to go:
-
-```js
-// config.js
-module.exports = {
-    debug: false,               // use node-irc debugging
-    server: 'irc.snoonet.org',  // server to connect to
-    channelsArray: ['#mmDev'],  // equal to `channels` array from node-irc
-    selfNickname: 'yanbi',      // the bots nickname
-    nickserv: false,            // if this is filed, bot auto-identifies with the given string
-    owner: 'r3dsmile',          // nickname of the owner
-    yanbiModules: './modules/'  // module folder to be loaded.
+### Initializing
+create a `yanbi.config.json` file with
+```
+{
+  "modulesPath": "path/to/yanbi/modules/",
+  "owner": "bot-owner"
 }
 ```
-```js
-    // init.js
-    require('./config.js');
-    require('yanbi')(config);
+and a `irc.config.json` with (at least)
+```
+{
+  "server": "irc.snoonet.org",
+  "nick": "yanbi",
+  "channels": ["#yanbi"]
+}
+```
+then issue `npm install yanbi --save`, create a `bot.js` and type
+```
+const Yanbi = require('yanbi');
 ```
 
 
-#### Modules (bot-scripts)
-Modules are javascript files that will be require()d by yanbi from the get go, depending on how you build your module, you will have a node-irc context and reload ability.
-A module is composed, primarily, of function which sets `name`, `version` and `author` as its propreties; `name` is mandatory for the module to be loaded. Since yanbi requires it anyway, to know if these props exist, it unloades it right after via `delete require.cache[]`.
 
-```js
-EXAMPLE = function () {
-    this.name = "Example";
-    this.author = "moshmage@gmail.com";
-    this.version = "0.0.0";
-    this.description = "Example and simple implementation";
-};
-module.exports = EXAMPLE;
+### What's that about modules?
+A Yanbi module is the same as it was on previous versions: a simple way for us to organize bot-scripts.
+A simple `Greeter` example:
+```
+class Greeter {
+    constructor(events) {
+        this.name = "Greeter";
+        this.version = "1.0";
+        this.author = "moshmage@gmail.com";
+
+        this.events = events;
+        this.events.listen('join', '#yanbi', (channel, nick) => this.greetNick(channel, nick));
+    }
+
+    initialize() {}
+    rehasher() {}
+
+    greetNick(channel, nick) {
+        this.events.client.say(channel, `Hello, ${nick}`);
+    }
+}
+
+module.exports = Greeter;
 ```
 
-##### Giving your module a IRC Context
-This can be achieved by providing a `initialize` proprety, which will be executed by yanbi with the `Eventer` Object:
-```js
-EXAMPLE.prototype.initialize = function (EventerService) {
-    // ...
-};
+Paste that under the `modulesPath` you configured.
+Go into the console and issue `node bot.js`, hop on the same server and channel and you should see your bot.
+
+*note: `initializer()` and `rehasher()` functions are mandatory and will be called uppon said states*
+*`name` `version` and `author` are used for console.log purposes*
+
+This file will be loaded by `ModuleManager` and given an `Event` context when loaded (via new!).
+
+### This.events
+Avoid using `irc.addListener` so we don't bloat the Event Emitter; That way we free it
+to actually do stuff that matters (sending and receiving messages) while we let the Event arrays do the logical
+work.
+
+To do so, you `addType` events, really just a mask for the unique `addListener` of that kind, and then you `listen` on that same time for "events".
+
+### Even Simpler Example?
+
 ```
-##### Reloading your modules
-Reloading your modules is done by issueing a notice to your bot containing `.rehash <module-name>`, if no module name is provided yanbi will reload the entire folder (useful for enabling or disabling modules). yanbi also posesses a `.unload <module-name>` but it **wont** unload your whole folder if you don't type a module-name. Also, this is where the `owner` prop from your configuration is used.
+const Yanbi = require('yanbi.js');
 
-```js
-EXAMPLE.prototype.rehasher = function (EventerService) {
-    // use this function to unhook from Eventer,
-    // delete setIntervals or setTimeouts that havent finished
-    // .. etc
-};
+function onReady(events) {
+    "use strict";
+
+    /**
+     * Answering to "hello" at the start of the sentences
+     */
+    events.listen('message#',"hello", (nick, to, text) => {
+        "use strict";
+        if (text.indexOf('world') < 0) events.client.say(to, `WORLD! world is what you should say ${nick}`);
+        else events.client.say(to, `yo! ${nick} knows his dev memes :)`);
+    });
+
+    /**
+     * Counting joins and parts and welcoming user
+     */
+    let joins = 0; let parts = 0;
+    events.listen('join',"#channel", (channel, nick) => {
+        "use strict";
+        events.client.say(channel, `welcome, ${nick}. People joined this channel ${++joins} times.`)
+    });
+
+    events.listen('part',"#channel", (channel, nick) => {
+        "use strict";
+        events.client.say(channel, `... and left ${++parts} times. There goes ${nick}..`);
+    });
+
+    /**
+     * checking for Nick to join in *any* channel we are in
+     */
+    events.listen('join',"Nick", (channel, nick) => {
+        "use strict";
+        events.client.say(channel, `... have you been following me, ${nick}?`);
+    });
+
+    /**
+     * Checking if Nick sends as a /notice saying hello
+     */
+    events.listen('notice',"Nick", (nick, me, text) => {
+        "use strict";
+        if (text.indexOf('hello') > -1) events.notice(nick, `hi, ${nick}.`);
+        else events.client.notice(nick, `sup, ${nick}`);
+    });
+
+    /**
+     * checking if a /notice by anyone starts with "hello"
+     */
+    events.listen('notice',"hello", (nick, me, text) => {
+        "use strict";
+        events.client.notice(nick, `hi, ${nick}.`);
+    });
+
+    /**
+     * checking if Nick is a channel we join
+     * *place: true MUST be used*
+     * this is the only use case where `place` is not a number.
+     */
+    events.listen('names',{place: true, word: "Nick"}, (channel, nicks, nick) => {
+        "use strict";
+        events.client.say(channel, `hi, ${nick}, you're in my ${channel}.`);
+    });
+
+    /**
+     * checking who joins a channel where you are at
+     */
+    events.listen('names',"#channel", (channel, nicks, nick) => {
+        "use strict";
+        let totalPeople = nicks.length;
+        events.client.say(channel, `wow! there's ${totalPeople} nicks in my ${channel} :D`);
+        events.client.say(channel, `but.. ${nick} is the special one`);
+    });
+
+}
+
+const yanbi = new Yanbi(onReady);
 ```
-Reloading your modules, if made properly, shouldn't kill your bot and if successfull it will report back with a notice.
 
-##### Disabling a module
-If the name of the file inside the modules folder starts with a `_` (underscore) that module will be ignored from the loading of the module folder, both on initialize and on rehash.
-
-##### Module Manager
-YANBI returns a `ModuleMan` proprety so you can build around it as well.
-`ModuleMan` contains an Object `List` holding every module, `loadModulesFolder`, `initializeModule` and `unloadModule` which are self explanatory. It also provides an `initialize` but I advise against calling on it, as it will cause all your modules to be re-loaded without calling the `rehasher()` before.
-
-### Eventer
-
-Hooking to the node-irc events is different. You have to create the Parent Event and assign a function handler, and then you set a `catchEvent` with a word filter and another function handler. This all sounds complicated, but it isn't. This was made so that we don't pollute the EventEmitter with the same event-request. You can still hook to the default node-irc behaviour by using `Eventer.client.*` functions as they are available throughout the modules.
-
-##### Default Hooks
-By default, `dispatcher.js` has the following hooks
+### Event Hooking, Creating an Defaults
+By default, ModuleManager is in charge of creating has the following hooks
 - join
 - part
 - names
 - notice
 - message#
 
-To these events, all you have to do is use the [`Eventer.catchEvent`](https://github.com/moshmage/irc-slap-bot/blob/master/eventer.js#L54) function.
+To access events on these types, use the `this.events.listen()` function inside your module (or `events` if you're directly using the `onReady` function).
 
-##### Creating a new hook
-In the case that you need to create another hook, you can do so by using [`Eventer.createEventType`](https://github.com/moshmage/irc-slap-bot/blob/master/eventer.js#L34) function.
-
-##### Releasing a hook
-In the event that you don't want the event to be caught again, you can release it using [`Eventer.releaseEvent()`](https://github.com/moshmage/irc-slap-bot/blob/master/eventer.js#L78)
-
-
-
-### Botting
-Botting is done via the `Eventer.client` object. both your modules have it and YANBI exports it as a proprety from the require function. `Eventer.client` is, in itself, the [node-irc](https://node-irc.readthedocs.io/en/latest/API.html#Client.join) lib so you can use all those available comands through it.
-
-```js
-function sayHi(channel, nick) {
-    // channel = "#mmDev", nick = "r3d"
-    Eventer.client.say(channel, 'Hi, ' + nick); // Issues message to #mmDev saying "Hi, r3d"
-});
+#### Creating new events
+```
+this.events.addType('message#mychannel', (from, message) => {
+    if (message.indexOf('ho ho ho') > -1 || from == "Santa") {
+        this.events.client.say('Go and find Rudolf!');
+    }
+})
 ```
 
-### More examples
-More examples of modules can be seen in the yanbi `modules/` folder.
+Remember, YANBI is a moduler on top of node-irc, so we have the exact same events available as in node-irc. In time, I'll add one or another I'm thinking are missing - as well as auto-authentication.
