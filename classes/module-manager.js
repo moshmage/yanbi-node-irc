@@ -28,14 +28,7 @@ class ModuleManager {
             defaultHooks.create(this.events);
             this.loadFromFolder();
             
-            this.events.listen('notice', '.rehash', (nick, to, message) => {
-                if (!this.isBotOwner(nick)) return;
-                message = message.split(' ');
-                let moduleName = message[1];
-                this.rehashModule(moduleName, nick);
-
-            });
-
+            this.events.listen('notice', '.rehash', (nick, to, message) => this.rehashModule(message, nick));
             this.events.listen('notice', '.unload', (nick, to, message) => this.unloadModule(message, nick));
 
             if (onReady && typeof onReady === "function") {
@@ -79,6 +72,9 @@ class ModuleManager {
     }
 
     rehashModule(moduleName, nick) {
+        if (!this.isBotOwner(nick)) return;
+
+        moduleName = moduleName.split(' ');
         let module = this.getModule(moduleName);
 
         if (!module) {
