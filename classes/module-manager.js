@@ -36,22 +36,7 @@ class ModuleManager {
 
             });
 
-            this.events.listen('notice', '.unload', (nick, to, message) => {
-                message = message.split(' ');
-                let moduleName = message[1];
-                if (!moduleName) {
-                    this.events.client.notice(nick, 'Need a module to unload');
-                    return;
-                }
-
-                if (!this.getModule(moduleName)) {
-                    this.events.client.notice(nick, 'Unexisting module: ' + moduleName);
-                    return;
-                }
-
-                this.unloadModule(message[1]);
-                this.events.client.notice(nick, 'Unloaded: ' + moduleName + ' :)');
-            });
+            this.events.listen('notice', '.unload', (nick, to, message) => this.unloadModule(message, nick));
 
             if (onReady && typeof onReady === "function") {
                 onReady(this.events);
@@ -113,7 +98,26 @@ class ModuleManager {
      * Unloads a module from @this.modules and its require-cache counter-part
      * @param name
      */
-    unloadModule(name) {
+    unloadModule(message, nick) {
+        let moduleName;
+
+        if (!nick) {
+            moduleName = message;
+        } else {
+            moduleName = message[1];
+        }
+
+        if (!moduleName) {
+            if (nick) this.events.client.notice(nick, 'Need a module to unload');
+            else console.log(`Warn: cannot unload undefined modules`);
+            return;
+        }
+
+        if (!this.getModule(moduleName)) {
+            if (nick) this.events.client.notice(nick, 'Unexisting module: ' + moduleName);
+            else console.log(`Warn: ${moduleName} doesn't exist`);
+            return;
+        }
 
         if (typeof this.getModule(name).rehasher() === "function") {
             this.getModule(name).rehasher();
@@ -122,7 +126,9 @@ class ModuleManager {
         delete require.cache[this.modules[name].path];
         delete this.modules[name];
 
-        console.log(`Info: Unloaded ${name}: ${!!this.modules[name]}`)
+        if (nick) this.events.client.notice(nick, 'Unloaded: ' + moduleName + ' :)');
+        console.log(`Info: Unloaded ${name}: ${!!this.modules[name]}`);
+
     }
 
     loadFromFolder() {
