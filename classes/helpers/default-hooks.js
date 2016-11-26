@@ -17,6 +17,7 @@ class DefaultHooks {
     }
 
     callJoinPartChilds(type, channel, nick) {
+        if (nick === this.events.client.nick) console.log(`Info: self joined ${channel}`);
         this.events.getChilds(type).forEach(event => {
             if (event.matches(channel) || event.matches(nick)) {
                 event.callback(channel, nick);

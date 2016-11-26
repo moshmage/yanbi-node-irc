@@ -4,6 +4,7 @@
 "use strict";
 const fs = require('fs');
 const reRequire = require('re-require-module').reRequire;
+const defaultHooks = require('./helpers/default-hooks.js');
 
 class Module {
     constructor(module) {
@@ -23,6 +24,7 @@ class ModuleManager {
 
         this.events.addType('registered', () => {
             this.loadFromFolder();
+            defaultHooks.create(this.events);
 
             this.events.listen('notice', '.rehash', (nick, to, message) => {
                 if (!this.isBotOwner(nick)) return;
@@ -31,7 +33,7 @@ class ModuleManager {
                 this.rehashModule(moduleName, nick);
 
             });
-            
+
             this.events.listen('notice', '.rehash', (nick, to, message) => {
                 message = message.split(' ');
                 let moduleName = message[1];
