@@ -44,7 +44,7 @@ class Events {
      * @void
      */
     addType(eventName, callback, once) {
-        if (typeof this.parent[eventName] === 'EventType' && !once) return false;
+        if (this.parent[eventName] instanceof EventType && !once) return false;
 
         if (once) {
             this.client.once(eventName, callback);
