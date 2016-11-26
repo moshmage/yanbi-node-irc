@@ -24,9 +24,10 @@ class ModuleManager {
         this.botOwner = options.botOwner;
 
         this.events.addType('registered', () => {
-            this.loadFromFolder();
-            defaultHooks.create(this.events);
 
+            this.events = defaultHooks.create(this.events);
+            this.loadFromFolder();
+            
             this.events.listen('notice', '.rehash', (nick, to, message) => {
                 if (!this.isBotOwner(nick)) return;
                 message = message.split(' ');
@@ -82,10 +83,11 @@ class ModuleManager {
 
         if (!rehash) tempModule = require(path);
         else tempModule = reRequire(path);
+        tempModule = new tempModule(this.events);
 
         this.modules[tempModule.name] = new Module(tempModule);
         this.modules[tempModule.name].path = this.modulesPath + file;
-        this.modules[tempModule.name].initialize(this.events);
+        this.modules[tempModule.name].initialize();
 
         console.log(`${!rehash ? 'loaded' : 'rehashed'} ${tempModule.name}@${tempModule.version} by ${tempModule.author}`);
 
