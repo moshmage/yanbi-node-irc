@@ -25,7 +25,8 @@ class ModuleManager {
 
         this.events.addType('registered', () => {
 
-            this.events = defaultHooks.create(this.events);
+            defaultHooks.create(this.events);
+            console.log(this.events);
             this.loadFromFolder();
             
             this.events.listen('notice', '.rehash', (nick, to, message) => {
@@ -87,7 +88,7 @@ class ModuleManager {
 
         this.modules[tempModule.name] = new Module(tempModule);
         this.modules[tempModule.name].path = this.modulesPath + file;
-        this.modules[tempModule.name].initialize();
+        tempModule.initialize();
 
         console.log(`${!rehash ? 'loaded' : 'rehashed'} ${tempModule.name}@${tempModule.version} by ${tempModule.author}`);
 

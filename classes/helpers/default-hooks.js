@@ -15,7 +15,6 @@ class DefaultHooks {
         this.events.addType('notice', this.handleNoticeEvent, false);
         this.events.addType('message#', this.handleMessageFromChannel, false);
 
-        return this.events;
     }
 
     callJoinPartChilds(type, channel, nick) {
