@@ -2,10 +2,10 @@
 const fs = require('fs');
 const Config = require('../classes/config');
 
-const required = ['server', 'channel', 'nickname'];
+const required = ['server', 'channels', 'nick'];
 const defaultConfig = {
     server: '',
-    channel: [],
+    channels: [],
     nick: ''
 };
 

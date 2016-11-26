@@ -6,7 +6,7 @@
   "author": "moshmage@gmail.com",
   "license": "ISC",
   "dependencies": {
-    "irc": "^0.5.0",
+    "irc": "^0.5.2",
     "re-require-module": "^1.0.2"
   },
   "devDependencies": {},
