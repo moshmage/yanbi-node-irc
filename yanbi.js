@@ -1,7 +1,7 @@
 /**
  * Created by Mosh Mage on 11/25/2016.
  */
-
+"use strict";
 const IrcContext = require('./classes/irc-context.js');
 const ModuleManager = require('./classes/module-manager.js');
 

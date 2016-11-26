@@ -1,6 +1,7 @@
 /**
  * Created by Mosh Mage on 11/25/2016.
  */
+"use strict";
 const irc = require('irc');
 const Events = require('./events.js');
 
