@@ -10,8 +10,8 @@ class Yanbi {
         const IrcConfig = require('./config/irc.config.js');
         const YanbiConfig = require('./config/yanbi.config.js');
 
-        this.yanbiConfig = YanbiConfig;
-        this.ircContext = new IrcContext(IrcConfig);
+        this.yanbiConfig = YanbiConfig.options;
+        this.ircContext = new IrcContext(IrcConfig.options);
         try {
             this.moduleManager = new ModuleManager(this.ircContext.events, this.yanbiConfig, onReady);
         } catch (e) {
