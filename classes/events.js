@@ -1,7 +1,7 @@
 /**
  * Created by Mosh Mage on 11/25/2016.
  */
-
+"use strict";
 class EventType {
     constructor(type, callback) {
         this.type = type;

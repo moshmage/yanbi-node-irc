@@ -1,7 +1,7 @@
 /**
  * Created by Mosh Mage on 11/25/2016.
  */
-
+"use strict";
 const Yanbi = require('../yanbi.js');
 
 function onReady(events) {

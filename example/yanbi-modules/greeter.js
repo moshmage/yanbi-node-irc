@@ -1,6 +1,7 @@
 /**
  * Created by Mosh Mage on 11/25/2016.
  */
+"use strict";
 class Greeter {
     constructor(events) {
         this.name = "Greeter";
