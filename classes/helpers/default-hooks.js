@@ -20,7 +20,8 @@ class DefaultHooks {
     callJoinPartChilds(type, channel, nick) {
         if (nick === this.events.client.nick) console.log(`Info: self joined ${channel}`);
         this.events.getChilds(type).forEach(event => {
-            if (event.matches(channel) || event.matches(nick)) {
+            if (event.onIndex === true && event.matches(nick)
+                || event.matches(channel)) {
                 event.callback(channel, nick);
             }
         });
@@ -62,7 +63,8 @@ class DefaultHooks {
      */
     handleMessageFromChannel(nick, to, text) {
         this.events.getChilds('message#').forEach(event => {
-            if (event.matches(text, true)) {
+            if (event.onIndex === true && event.matches(nick)
+                || event.matches(text, true)) {
                 event.callback(nick, to, text);
             }
         })
