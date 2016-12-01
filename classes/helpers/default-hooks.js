@@ -43,7 +43,8 @@ class DefaultHooks {
 
     handleNoticeEvent(nick, to, text) {
         this.events.getChilds('notice').forEach(event => {
-            if (event.matches(text, true) || event.matches(nick)) {
+            if (event.onIndex === true && event.matches(nick)
+                || event.matches(text, true)) {
                 event.callback(nick, to, text);
             }
         });
