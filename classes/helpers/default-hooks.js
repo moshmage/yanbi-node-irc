@@ -13,7 +13,8 @@ class DefaultHooks {
         this.events.addType('part', (channel, nick) => this.handlePartEvent(channel, nick), false);
         this.events.addType('names', (channel, nicks) => this.handleNamesEvent(channel, nicks), false);
         this.events.addType('notice', (nick, to, text) => this.handleNoticeEvent(nick, to, text), false);
-        this.events.addType('message#', (nick, to, text) => this.handleMessageFromChannel(nick, to, text), false);
+        this.events.addType('message#', (nick, to, text) => this.handleMessage('message#', nick, to, text), false);
+        this.events.addType('pm', (nick, to, text) => this.handleMessage('pm', nick, to, text), false);
 
     }
 
@@ -54,6 +55,7 @@ class DefaultHooks {
     /**
      * Finds <word|a phrase> ({string} value) in received message
      * callsback with "nick", "to" and "text" as arguments;
+     * note: TO might be "text" if you're listening on 'pm'
      * 
      * this.event.listen('message#', {word:'!hello', place: 0}, (nick, to, text) => {})
      * ------ 
@@ -61,8 +63,8 @@ class DefaultHooks {
      * @param to        channel or (your) nick if PM
      * @param text      text from message
      */
-    handleMessageFromChannel(nick, to, text) {
-        this.events.getChilds('message#').forEach(event => {
+    handleMessage(type, nick, to, text) {
+        this.events.getChilds(type).forEach(event => {
             if (event.onIndex === true && event.matches(nick)
                 || event.matches(text, true)) {
                 event.callback(nick, to, text);
