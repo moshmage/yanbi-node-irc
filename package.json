@@ -1,6 +1,6 @@
 {
   "name": "yanbi",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "yet another node-irc bot implementation",
   "main": "yanbi.js",
   "author": "moshmage@gmail.com",
